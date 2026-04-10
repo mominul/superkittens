@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::{Arc, OnceLock, RwLock};
+use std::sync::{Arc, RwLock};
 
 use reqwest::Client;
 use serde_json::Value;
@@ -26,7 +26,11 @@ struct QuerierGlobal {
     client: Client,
 }
 
-static GLOBAL: OnceLock<Arc<QuerierGlobal>> = OnceLock::new();
+#[cfg(not(feature = "testing"))]
+static GLOBAL: std::sync::OnceLock<Arc<QuerierGlobal>> = std::sync::OnceLock::new();
+
+#[cfg(feature = "testing")]
+static GLOBAL: RwLock<Option<Arc<QuerierGlobal>>> = RwLock::new(None);
 
 /// HTTP client for communicating with the SuperTokens Core service.
 ///
@@ -39,14 +43,13 @@ pub struct Querier {
 }
 
 impl Querier {
-    /// Initialize the global querier state. Must be called once during SDK init.
-    pub fn init(
+    fn new_global(
         hosts: Vec<Host>,
         api_key: Option<String>,
         network_interceptor: Option<NetworkInterceptor>,
         disable_cache: bool,
-    ) {
-        let _ = GLOBAL.set(Arc::new(QuerierGlobal {
+    ) -> Arc<QuerierGlobal> {
+        Arc::new(QuerierGlobal {
             hosts,
             api_key,
             network_interceptor,
@@ -59,10 +62,34 @@ impl Querier {
                 .timeout(std::time::Duration::from_secs(30))
                 .build()
                 .expect("Failed to create HTTP client"),
-        }));
+        })
+    }
+
+    /// Initialize the global querier state. Must be called once during SDK init.
+    #[cfg(not(feature = "testing"))]
+    pub fn init(
+        hosts: Vec<Host>,
+        api_key: Option<String>,
+        network_interceptor: Option<NetworkInterceptor>,
+        disable_cache: bool,
+    ) {
+        let _ = GLOBAL.set(Self::new_global(hosts, api_key, network_interceptor, disable_cache));
+    }
+
+    #[cfg(feature = "testing")]
+    pub fn init(
+        hosts: Vec<Host>,
+        api_key: Option<String>,
+        network_interceptor: Option<NetworkInterceptor>,
+        disable_cache: bool,
+    ) {
+        let global = Self::new_global(hosts, api_key, network_interceptor, disable_cache);
+        let mut guard = GLOBAL.write().expect("Failed to acquire write lock on Querier global");
+        *guard = Some(global);
     }
 
     /// Get a Querier instance. Optionally specify a recipe ID to include in Core requests.
+    #[cfg(not(feature = "testing"))]
     pub fn get_instance(rid_to_core: Option<String>) -> Result<Self, SuperTokensError> {
         let global = GLOBAL.get().ok_or_else(|| {
             raise_general_exception("Querier not initialized. Call Supertokens::init() first.")
@@ -78,8 +105,32 @@ impl Querier {
         })
     }
 
+    #[cfg(feature = "testing")]
+    pub fn get_instance(rid_to_core: Option<String>) -> Result<Self, SuperTokensError> {
+        let guard = GLOBAL.read().expect("Failed to acquire read lock on Querier global");
+        let global = guard.as_ref().ok_or_else(|| {
+            raise_general_exception("Querier not initialized. Call Supertokens::init() first.")
+        })?;
+
+        if !global.init_called.load(Ordering::Relaxed) {
+            return Err(raise_general_exception("Querier not initialized"));
+        }
+
+        Ok(Self {
+            hosts: global.hosts.clone(),
+            rid_to_core,
+        })
+    }
+
+    #[cfg(not(feature = "testing"))]
     fn global() -> &'static Arc<QuerierGlobal> {
         GLOBAL.get().expect("Querier not initialized")
+    }
+
+    #[cfg(feature = "testing")]
+    fn global() -> Arc<QuerierGlobal> {
+        let guard = GLOBAL.read().expect("Failed to acquire read lock on Querier global");
+        guard.clone().expect("Querier not initialized")
     }
 
     /// Negotiate the API version with the SuperTokens Core.
@@ -89,7 +140,8 @@ impl Querier {
     ) -> Result<String, SuperTokensError> {
         // Check cache first
         {
-            let cached = Self::global().api_version.read().unwrap();
+            let global = Self::global();
+            let cached = global.api_version.read().unwrap();
             if let Some(ref v) = *cached {
                 return Ok(v.clone());
             }
@@ -135,7 +187,8 @@ impl Querier {
 
         // Cache result
         {
-            let mut cached = Self::global().api_version.write().unwrap();
+            let global = Self::global();
+            let mut cached = global.api_version.write().unwrap();
             *cached = Some(api_version.clone());
         }
 
@@ -440,9 +493,17 @@ impl Querier {
                 .copied()
                 .unwrap_or(false);
             if !keep_alive {
+                #[cfg(not(feature = "testing"))]
                 if let Some(global) = GLOBAL.get() {
                     let mut tag = global.global_cache_tag.write().unwrap();
                     *tag = get_timestamp_ms();
+                }
+                #[cfg(feature = "testing")]
+                if let Ok(guard) = GLOBAL.read() {
+                    if let Some(ref global) = *guard {
+                        let mut tag = global.global_cache_tag.write().unwrap();
+                        *tag = get_timestamp_ms();
+                    }
                 }
             }
         }
@@ -588,9 +649,10 @@ impl Querier {
     }
 
     /// Reset global state (testing only).
-    #[cfg(test)]
+    #[cfg(feature = "testing")]
     pub fn reset() {
-        // OnceLock doesn't support reset, but in tests we can use a different approach
+        let mut guard = GLOBAL.write().expect("Failed to acquire write lock on Querier global");
+        *guard = None;
     }
 }
 

@@ -1,4 +1,4 @@
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 use crate::constants::{FDI_KEY_HEADER, RID_KEY_HEADER};
 use crate::error::{raise_bad_input_exception, raise_general_exception, SuperTokensError};
@@ -12,7 +12,11 @@ use crate::types::config::{AppInfo, Host, InputAppInfo, SupertokensConfig};
 use crate::user_context::UserContext;
 use crate::utils;
 
-static INSTANCE: OnceLock<Arc<Supertokens>> = OnceLock::new();
+#[cfg(not(feature = "testing"))]
+static INSTANCE: std::sync::OnceLock<Arc<Supertokens>> = std::sync::OnceLock::new();
+
+#[cfg(feature = "testing")]
+static INSTANCE: std::sync::RwLock<Option<Arc<Supertokens>>> = std::sync::RwLock::new(None);
 
 /// The main SuperTokens SDK singleton.
 ///
@@ -37,10 +41,26 @@ impl Supertokens {
     /// Initialize the SuperTokens SDK singleton.
     ///
     /// Must be called exactly once before any SDK operations.
+    #[cfg(not(feature = "testing"))]
     pub fn init(config: SupertokensInit) -> Result<(), SuperTokensError> {
         INSTANCE
             .set(Arc::new(Self::create(config)?))
             .map_err(|_| raise_general_exception("SuperTokens has already been initialized"))
+    }
+
+    #[cfg(feature = "testing")]
+    pub fn init(config: SupertokensInit) -> Result<(), SuperTokensError> {
+        let instance = Arc::new(Self::create(config)?);
+        let mut guard = INSTANCE.write().map_err(|_| {
+            raise_general_exception("Failed to acquire write lock on SuperTokens instance")
+        })?;
+        if guard.is_some() {
+            return Err(raise_general_exception(
+                "SuperTokens has already been initialized",
+            ));
+        }
+        *guard = Some(instance);
+        Ok(())
     }
 
     fn create(config: SupertokensInit) -> Result<Self, SuperTokensError> {
@@ -78,10 +98,29 @@ impl Supertokens {
     }
 
     /// Get the singleton instance.
+    #[cfg(not(feature = "testing"))]
     pub fn get_instance() -> Result<&'static Arc<Supertokens>, SuperTokensError> {
         INSTANCE.get().ok_or_else(|| {
             raise_general_exception("SuperTokens not initialized. Call Supertokens::init() first.")
         })
+    }
+
+    #[cfg(feature = "testing")]
+    pub fn get_instance() -> Result<Arc<Supertokens>, SuperTokensError> {
+        let guard = INSTANCE.read().map_err(|_| {
+            raise_general_exception("Failed to acquire read lock on SuperTokens instance")
+        })?;
+        guard.clone().ok_or_else(|| {
+            raise_general_exception("SuperTokens not initialized. Call Supertokens::init() first.")
+        })
+    }
+
+    /// Reset the singleton (testing only). Clears the instance so `init()` can be called again.
+    #[cfg(feature = "testing")]
+    pub fn reset() {
+        if let Ok(mut guard) = INSTANCE.write() {
+            *guard = None;
+        }
     }
 
     /// Collect all CORS headers needed by registered recipes.

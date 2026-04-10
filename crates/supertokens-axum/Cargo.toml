@@ -24,8 +24,13 @@ url = "2"
 urlencoding = "2"
 
 [dev-dependencies]
+supertokens = { path = "../supertokens", features = ["testing"] }
 tokio = { workspace = true, features = ["test-util", "full"] }
 async-trait = { workspace = true }
+serial_test = "3"
+hyper = { version = "1", features = ["full"] }
+tower = { workspace = true, features = ["util"] }
+reqwest = { workspace = true }
 
 [[example]]
 name = "axum_emailpassword"

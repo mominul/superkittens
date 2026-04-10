@@ -78,10 +78,28 @@ pub type GetTenantIdFn = std::sync::Arc<
 >;
 
 /// Global tenant ID resolver (set once during init).
+#[cfg(not(feature = "testing"))]
 static GET_TENANT_ID: std::sync::OnceLock<GetTenantIdFn> = std::sync::OnceLock::new();
 
+#[cfg(feature = "testing")]
+static GET_TENANT_ID: std::sync::RwLock<Option<GetTenantIdFn>> = std::sync::RwLock::new(None);
+
+#[cfg(not(feature = "testing"))]
 pub fn set_get_tenant_id(f: GetTenantIdFn) {
     let _ = GET_TENANT_ID.set(f);
+}
+
+#[cfg(feature = "testing")]
+pub fn set_get_tenant_id(f: GetTenantIdFn) {
+    let mut guard = GET_TENANT_ID.write().expect("Failed to acquire write lock on GET_TENANT_ID");
+    *guard = Some(f);
+}
+
+/// Reset the tenant ID resolver (testing only).
+#[cfg(feature = "testing")]
+pub fn reset_get_tenant_id() {
+    let mut guard = GET_TENANT_ID.write().expect("Failed to acquire write lock on GET_TENANT_ID");
+    *guard = None;
 }
 
 /// The base trait for all recipe modules.
@@ -163,7 +181,12 @@ pub trait RecipeModule: Send + Sync {
 
         // Resolve tenant_id
         let tenant_id = if let Some(ref tid) = tenant_id_from_url {
-            if let Some(get_tid) = GET_TENANT_ID.get() {
+            #[cfg(not(feature = "testing"))]
+            let get_tid_fn = GET_TENANT_ID.get().cloned();
+            #[cfg(feature = "testing")]
+            let get_tid_fn = GET_TENANT_ID.read().ok().and_then(|g| g.clone());
+
+            if let Some(get_tid) = get_tid_fn {
                 get_tid(tid.clone(), user_context.clone()).await
             } else {
                 tid.clone()
