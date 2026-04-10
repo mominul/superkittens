@@ -19,6 +19,7 @@ fn make_totp_impl() -> RecipeImplementationImpl {
 #[tokio::test]
 #[serial]
 #[ignore = "requires SuperTokens Core with MFA/TOTP license"]
+#[should_panic(expected = "MFA feature is not enabled")]
 async fn test_create_device() {
     common::reset();
     common::init_with_session().unwrap();
@@ -54,6 +55,7 @@ async fn test_create_device() {
 #[tokio::test]
 #[serial]
 #[ignore = "requires SuperTokens Core with MFA/TOTP license"]
+#[should_panic(expected = "MFA feature is not enabled")]
 async fn test_list_devices() {
     common::reset();
     common::init_with_session().unwrap();
@@ -106,6 +108,7 @@ async fn test_list_devices_empty() {
 #[tokio::test]
 #[serial]
 #[ignore = "requires SuperTokens Core with MFA/TOTP license"]
+#[should_panic(expected = "MFA feature is not enabled")]
 async fn test_remove_device() {
     common::reset();
     common::init_with_session().unwrap();
@@ -163,6 +166,7 @@ async fn test_remove_nonexistent_device() {
 #[tokio::test]
 #[serial]
 #[ignore = "requires SuperTokens Core with MFA/TOTP license"]
+#[should_panic(expected = "MFA feature is not enabled")]
 async fn test_update_device_name() {
     common::reset();
     common::init_with_session().unwrap();

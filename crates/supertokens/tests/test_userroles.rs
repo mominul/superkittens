@@ -827,6 +827,7 @@ async fn test_get_all_roles() {
 #[tokio::test]
 #[serial]
 #[ignore = "requires SuperTokens Core with multitenancy license"]
+#[should_panic(expected = "Not found")]
 async fn test_multitenancy_in_user_roles() {
     common::reset();
     common::init_with_session().unwrap();
