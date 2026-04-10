@@ -136,3 +136,12 @@ fn test_tld_for_same_site() {
         );
     }
 }
+
+#[test]
+fn test_find_max_version_exact_match() {
+    // Both arrays are identical — the max common version should be returned
+    let sv = &["1.0", "2.0", "3.0"];
+    let cv = &["1.0", "2.0", "3.0"];
+    let result = find_max_version(sv, cv);
+    assert_eq!(result, Some("3.0".to_string()));
+}

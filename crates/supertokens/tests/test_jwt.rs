@@ -16,7 +16,7 @@ fn make_jwt_impl() -> RecipeImplementationImpl {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires fix: /recipe/jwt endpoint changed in CDI 5.4"]
+#[ignore = "requires running SuperTokens Core"]
 async fn test_create_jwt_with_default_validity() {
     common::reset();
     common::init_with_session().unwrap();
@@ -68,7 +68,7 @@ async fn test_create_jwt_with_custom_validity() {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires fix: /recipe/jwt endpoint changed in CDI 5.4"]
+#[ignore = "requires running SuperTokens Core"]
 async fn test_create_jwt_with_payload() {
     common::reset();
     common::init_with_session().unwrap();

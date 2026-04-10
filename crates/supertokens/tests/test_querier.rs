@@ -265,3 +265,62 @@ async fn test_querier_multiple_hosts() {
 
     common::reset();
 }
+
+#[tokio::test]
+#[serial]
+#[ignore = "requires running SuperTokens Core"]
+async fn test_caching_different_paths_not_shared() {
+    // Verifies that GET requests to different paths have separate cache entries.
+    common::reset();
+    common::init_with_session().unwrap();
+
+    let querier = Querier::get_instance(None).unwrap();
+    let mut ctx = common::new_user_context();
+
+    let hello_path =
+        supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
+    let apiversion_path =
+        supertokens::normalised_url_path::NormalisedURLPath::new("/apiversion").unwrap();
+
+    // GET /hello — populates cache for /hello
+    let resp_hello = querier
+        .send_get_request(&hello_path, None, &mut ctx)
+        .await;
+    assert!(
+        resp_hello.is_ok(),
+        "GET /hello should succeed: {:?}",
+        resp_hello.err()
+    );
+
+    // GET /apiversion — populates cache for /apiversion
+    let resp_version = querier
+        .send_get_request(&apiversion_path, None, &mut ctx)
+        .await;
+    assert!(
+        resp_version.is_ok(),
+        "GET /apiversion should succeed: {:?}",
+        resp_version.err()
+    );
+
+    // The two cached results should be different
+    assert_ne!(
+        resp_hello.unwrap(),
+        resp_version.unwrap(),
+        "Cached results for /hello and /apiversion should differ"
+    );
+
+    // Verify the cache has entries for both paths
+    let cache = ctx.get::<CoreCallCache>(internal_keys::CORE_CALL_CACHE);
+    assert!(
+        cache.is_some(),
+        "Cache should be populated after both GETs"
+    );
+    let cache = cache.unwrap();
+    assert!(
+        cache.len() >= 2,
+        "Cache should have at least 2 entries (one per path), got {}",
+        cache.len()
+    );
+
+    common::reset();
+}

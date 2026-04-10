@@ -1010,3 +1010,271 @@ async fn test_regenerate_access_token() {
 
     common::reset();
 }
+
+// ---------------------------------------------------------------------------
+// JWKS / Session Verify Extended
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+#[serial]
+#[ignore = "requires running SuperTokens Core"]
+async fn test_session_verify_after_refresh_still_works() {
+    common::reset();
+    common::init_with_session().unwrap();
+
+    let recipe_impl = make_session_recipe_impl();
+    let mut ctx = common::new_user_context();
+    let user_id = format!("jwks-refresh-{}", uuid::Uuid::new_v4());
+    let recipe_user_id = RecipeUserId::new(user_id.clone());
+
+    // Create a session
+    let session = recipe_impl
+        .create_new_session(
+            &user_id,
+            &recipe_user_id,
+            None,
+            None,
+            Some(true),
+            "public",
+            &mut ctx,
+        )
+        .await
+        .unwrap();
+
+    let tokens = session.get_all_session_tokens_dangerously();
+    let refresh_token = tokens.refresh_token.expect("Should have refresh token");
+
+    // Refresh the session to get new tokens (potentially with rotated keys)
+    let refreshed = recipe_impl
+        .refresh_session(&refresh_token, None, true, &mut ctx)
+        .await
+        .unwrap();
+
+    let new_tokens = refreshed.get_all_session_tokens_dangerously();
+    let new_access_token = &new_tokens.access_token;
+
+    // Verify the new access token works with get_session (exercises JWKS path)
+    let verified = recipe_impl
+        .get_session(
+            Some(new_access_token),
+            None,
+            Some(false),
+            Some(true),
+            None,
+            &mut ctx,
+        )
+        .await
+        .unwrap()
+        .unwrap();
+
+    assert_eq!(verified.get_user_id(), user_id);
+
+    common::reset();
+}
+
+#[tokio::test]
+#[serial]
+#[ignore = "requires running SuperTokens Core"]
+async fn test_session_verify_with_revoked_session_and_check_database() {
+    common::reset();
+    common::init_with_session().unwrap();
+
+    let recipe_impl = make_session_recipe_impl();
+    let mut ctx = common::new_user_context();
+    let user_id = format!("jwks-revoke-{}", uuid::Uuid::new_v4());
+    let recipe_user_id = RecipeUserId::new(user_id.clone());
+
+    // Create a session
+    let session = recipe_impl
+        .create_new_session(
+            &user_id,
+            &recipe_user_id,
+            None,
+            None,
+            Some(true),
+            "public",
+            &mut ctx,
+        )
+        .await
+        .unwrap();
+
+    let tokens = session.get_all_session_tokens_dangerously();
+    let access_token = &tokens.access_token;
+    let handle = session.get_handle().to_string();
+
+    // Revoke the session
+    let revoked = recipe_impl
+        .revoke_session(&handle, &mut ctx)
+        .await
+        .unwrap();
+    assert!(revoked);
+
+    // Without check_database, the token's signature is still valid so
+    // get_session may still succeed. With check_database=true it should
+    // detect the revocation and return an error.
+    let result = recipe_impl
+        .get_session(
+            Some(access_token),
+            None,
+            Some(false),
+            Some(true),
+            Some(true), // check_database = true
+            &mut ctx,
+        )
+        .await;
+
+    // After revocation with check_database=true, the result should either
+    // be an error (UNAUTHORISED) or Ok(None).
+    let is_failed = result.is_err() || result.as_ref().unwrap().is_none();
+    assert!(
+        is_failed,
+        "Revoked session with check_database=true should fail or return None"
+    );
+
+    common::reset();
+}
+
+#[tokio::test]
+#[serial]
+#[ignore = "requires running SuperTokens Core"]
+async fn test_session_access_token_payload_after_merge() {
+    common::reset();
+    common::init_with_session().unwrap();
+
+    let recipe_impl = make_session_recipe_impl();
+    let mut ctx = common::new_user_context();
+    let user_id = format!("jwks-merge-{}", uuid::Uuid::new_v4());
+    let recipe_user_id = RecipeUserId::new(user_id.clone());
+
+    // Create a session with initial payload
+    let session = recipe_impl
+        .create_new_session(
+            &user_id,
+            &recipe_user_id,
+            Some(json!({"role": "user"})),
+            None,
+            Some(true),
+            "public",
+            &mut ctx,
+        )
+        .await
+        .unwrap();
+
+    let handle = session.get_handle().to_string();
+
+    // Merge additional data into access token payload
+    let merged = recipe_impl
+        .merge_into_access_token_payload(
+            &handle,
+            json!({"premium": true}),
+            &mut ctx,
+        )
+        .await
+        .unwrap();
+    assert!(merged);
+
+    // Fetch session info and verify both initial and merged claims are present
+    let info = recipe_impl
+        .get_session_information(&handle, &mut ctx)
+        .await
+        .unwrap()
+        .unwrap();
+
+    assert_eq!(
+        info.custom_claims_in_access_token_payload["role"], "user",
+        "Original claim should be preserved"
+    );
+    assert_eq!(
+        info.custom_claims_in_access_token_payload["premium"], true,
+        "Merged claim should be present"
+    );
+
+    common::reset();
+}
+
+#[tokio::test]
+#[serial]
+#[ignore = "requires running SuperTokens Core"]
+async fn test_session_change_session_data_does_not_affect_access_token() {
+    common::reset();
+    common::init_with_session().unwrap();
+
+    let recipe_impl = make_session_recipe_impl();
+    let mut ctx = common::new_user_context();
+    let user_id = format!("jwks-dbdata-{}", uuid::Uuid::new_v4());
+    let recipe_user_id = RecipeUserId::new(user_id.clone());
+
+    // Create a session with an access token payload claim
+    let session = recipe_impl
+        .create_new_session(
+            &user_id,
+            &recipe_user_id,
+            Some(json!({"token_key": "token_value"})),
+            Some(json!({"db_key": "db_value"})),
+            Some(true),
+            "public",
+            &mut ctx,
+        )
+        .await
+        .unwrap();
+
+    let handle = session.get_handle().to_string();
+    let tokens = session.get_all_session_tokens_dangerously();
+    let access_token = &tokens.access_token;
+
+    // Update session data in the database
+    let updated = recipe_impl
+        .update_session_data_in_database(
+            &handle,
+            json!({"db_key": "new_db_value", "extra_db": 123}),
+            &mut ctx,
+        )
+        .await
+        .unwrap();
+    assert!(updated);
+
+    // Verify the access token via get_session - the access token payload
+    // should still contain the original claim, unaffected by the database
+    // data change.
+    let verified = recipe_impl
+        .get_session(
+            Some(access_token),
+            None,
+            Some(false),
+            Some(true),
+            None,
+            &mut ctx,
+        )
+        .await
+        .unwrap()
+        .unwrap();
+
+    assert_eq!(verified.get_user_id(), user_id);
+
+    // Confirm via session info that the database data changed but the
+    // access token payload did not.
+    let info = recipe_impl
+        .get_session_information(&handle, &mut ctx)
+        .await
+        .unwrap()
+        .unwrap();
+
+    assert_eq!(
+        info.session_data_in_database["db_key"], "new_db_value",
+        "Database data should be updated"
+    );
+    assert_eq!(
+        info.session_data_in_database["extra_db"], 123,
+        "New database field should be present"
+    );
+    assert_eq!(
+        info.custom_claims_in_access_token_payload["token_key"], "token_value",
+        "Access token payload should be unchanged"
+    );
+    assert!(
+        info.custom_claims_in_access_token_payload.get("db_key").is_none(),
+        "Database-only key should not appear in access token payload"
+    );
+
+    common::reset();
+}

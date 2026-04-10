@@ -25,16 +25,12 @@ impl RecipeInterface for RecipeImplementationImpl {
     ) -> Result<CreateDeviceResult, SuperTokensError> {
         let mut body = serde_json::json!({
             "userId": user_id,
+            "skew": skew.unwrap_or(1),
+            "period": period.unwrap_or(30),
         });
 
         if let Some(name) = device_name {
             body["deviceName"] = serde_json::Value::String(name.to_string());
-        }
-        if let Some(s) = skew {
-            body["skew"] = serde_json::json!(s);
-        }
-        if let Some(p) = period {
-            body["period"] = serde_json::json!(p);
         }
 
         let path = NormalisedURLPath::new("/recipe/totp/device")?;

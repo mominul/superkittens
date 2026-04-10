@@ -21,14 +21,14 @@ impl RecipeInterface for RecipeImplementationImpl {
         use_static_signing_key: Option<bool>,
         user_context: &mut UserContext,
     ) -> Result<CreateJwtResult, SuperTokensError> {
+        // Default validity: 100 years (matches Python SDK default)
+        let validity = validity_seconds.unwrap_or(3_153_600_000);
         let mut body = serde_json::json!({
             "payload": payload,
             "algorithm": "RS256",
             "jwksDomain": self.jwks_domain,
+            "validity": validity,
         });
-        if let Some(v) = validity_seconds {
-            body["validity"] = serde_json::json!(v);
-        }
         if let Some(s) = use_static_signing_key {
             body["useStaticSigningKey"] = serde_json::json!(s);
         }

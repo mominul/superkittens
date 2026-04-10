@@ -547,3 +547,55 @@ async fn test_array_explicit_max_age_overrides_default() {
     let result = validator.validate(&payload, &ctx).await;
     assert!(result.is_valid);
 }
+
+// ---------------------------------------------------------------------------
+// PrimitiveClaim — validator ID
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_primitive_claim_has_value_validator_with_id() {
+    let claim = PrimitiveClaim::new("test-claim", None);
+    let validator = claim.has_value_validator(json!("expected"), None, None);
+    // The validator ID should default to the claim key when no explicit id is given
+    assert_eq!(validator.get_id(), "test-claim");
+
+    // With an explicit id, it should use that instead
+    let validator_custom = claim.has_value_validator(
+        json!("expected"),
+        None,
+        Some("custom-id".to_string()),
+    );
+    assert_eq!(validator_custom.get_id(), "custom-id");
+}
+
+// ---------------------------------------------------------------------------
+// PrimitiveArrayClaim — includes_all / excludes_all edge cases
+// ---------------------------------------------------------------------------
+
+#[tokio::test]
+async fn test_array_includes_all_empty_required() {
+    // includes_all with an empty required list should always be valid
+    let claim = PrimitiveArrayClaim::new("permissions", None);
+    let validator = claim.includes_all(vec![], None, None);
+    let ctx = UserContext::new();
+    let payload = json!({"permissions": {"v": ["read", "write"], "t": get_timestamp_ms()}});
+    let result = validator.validate(&payload, &ctx).await;
+    assert!(
+        result.is_valid,
+        "includes_all with empty required list should be valid"
+    );
+}
+
+#[tokio::test]
+async fn test_array_excludes_all_empty_excluded() {
+    // excludes_all with an empty excluded list should always be valid
+    let claim = PrimitiveArrayClaim::new("roles", None);
+    let validator = claim.excludes_all(vec![], None, None);
+    let ctx = UserContext::new();
+    let payload = json!({"roles": {"v": ["admin", "user"], "t": get_timestamp_ms()}});
+    let result = validator.validate(&payload, &ctx).await;
+    assert!(
+        result.is_valid,
+        "excludes_all with empty excluded list should be valid"
+    );
+}

@@ -673,3 +673,53 @@ fn test_session_config_older_cookie_domain() {
         Some("old.supertokens.io".to_string())
     );
 }
+
+#[test]
+fn test_session_config_invalid_samesite_value() {
+    // An invalid cookie_same_site value should fall back to the default (lax)
+    // behaviour rather than causing an error, since the match arm uses a
+    // catch-all default branch.
+    let app_info = AppInfo::from_input(&InputAppInfo {
+        app_name: "SuperTokens".to_string(),
+        api_domain: "http://api.supertokens.io".to_string(),
+        website_domain: Some("http://supertokens.io".to_string()),
+        api_base_path: None,
+        api_gateway_path: None,
+        website_base_path: None,
+        origin: None,
+    })
+    .unwrap();
+
+    let result = supertokens::recipe::session::utils::validate_and_normalise_user_input(
+        &app_info,
+        SessionConfig {
+            cookie_same_site: Some("invalid_value".to_string()),
+            ..Default::default()
+        },
+    );
+
+    // Should succeed (falls back to default) rather than erroring
+    assert!(
+        result.is_ok(),
+        "Invalid cookie_same_site should fall back to default, not error"
+    );
+    // Default anti_csrf when same_site defaults to lax is ViaCustomHeader
+    let config = result.unwrap();
+    assert_eq!(
+        config.anti_csrf_function_or_string,
+        AntiCsrfConfig::ViaCustomHeader,
+    );
+}
+
+#[test]
+fn test_session_config_expose_access_token_to_frontend() {
+    let config = normalise_session_config(
+        "https://api.supertokens.io",
+        Some("https://supertokens.io"),
+        SessionConfig {
+            expose_access_token_to_frontend_in_cookie_based_auth: Some(true),
+            ..Default::default()
+        },
+    );
+    assert!(config.expose_access_token_to_frontend_in_cookie_based_auth);
+}
