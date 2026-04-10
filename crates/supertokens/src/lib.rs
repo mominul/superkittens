@@ -6,6 +6,7 @@ pub mod ingredients;
 pub mod logger;
 pub mod normalised_url_domain;
 pub mod normalised_url_path;
+pub mod post_st_init_callbacks;
 pub mod querier;
 pub mod recipe;
 pub mod recipe_module;

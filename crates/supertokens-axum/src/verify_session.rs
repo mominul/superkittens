@@ -46,7 +46,7 @@ impl Default for VerifySessionConfig {
 /// Stores the verified session in request extensions, accessible via `SessionExtension`.
 ///
 /// # Example
-/// ```ignore
+/// ```compile_fail
 /// use supertokens_axum::verify_session::{VerifySessionLayer, SessionExtension};
 ///
 /// let app = Router::new()

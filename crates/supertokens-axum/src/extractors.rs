@@ -18,7 +18,7 @@ use crate::verify_session::SessionExtension;
 /// Returns 401 if no valid session is found.
 ///
 /// # Example
-/// ```ignore
+/// ```compile_fail
 /// use supertokens_axum::extractors::Session;
 ///
 /// async fn handler(session: Session) -> impl IntoResponse {

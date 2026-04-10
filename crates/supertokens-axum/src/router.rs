@@ -6,7 +6,7 @@ use crate::middleware::SuperTokensLayer;
 /// Extension trait for Axum `Router` to easily add SuperTokens middleware and CORS.
 ///
 /// # Example
-/// ```ignore
+/// ```compile_fail
 /// use axum::Router;
 /// use supertokens_axum::SuperTokensRouter;
 ///

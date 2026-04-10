@@ -4,7 +4,7 @@
 //!
 //! ## Quick Start
 //!
-//! ```ignore
+//! ```no_run
 //! use axum::{Router, routing::get};
 //! use supertokens_axum::{SuperTokensRouter, extractors::Session};
 //!

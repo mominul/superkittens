@@ -44,6 +44,8 @@ pub fn reset() {
     Supertokens::reset();
     Querier::reset();
     supertokens::recipe_module::reset_get_tenant_id();
+    supertokens::post_st_init_callbacks::reset();
+    supertokens::recipe::multifactorauth::recipe_implementation::reset_factor_setup_funcs();
 }
 
 /// Standard InputAppInfo for tests.

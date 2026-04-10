@@ -45,7 +45,9 @@ impl Supertokens {
     pub fn init(config: SupertokensInit) -> Result<(), SuperTokensError> {
         INSTANCE
             .set(Arc::new(Self::create(config)?))
-            .map_err(|_| raise_general_exception("SuperTokens has already been initialized"))
+            .map_err(|_| raise_general_exception("SuperTokens has already been initialized"))?;
+        crate::post_st_init_callbacks::run_post_init_callbacks();
+        Ok(())
     }
 
     #[cfg(feature = "testing")]
@@ -60,6 +62,8 @@ impl Supertokens {
             ));
         }
         *guard = Some(instance);
+        drop(guard);
+        crate::post_st_init_callbacks::run_post_init_callbacks();
         Ok(())
     }
 
