@@ -1,0 +1,27 @@
+[package]
+name = "supertokens"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "SuperTokens Rust SDK — framework-agnostic authentication library"
+
+[dependencies]
+tokio = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+url = { workspace = true }
+regex = { workspace = true }
+chrono = { workspace = true }
+jsonwebtoken = { workspace = true }
+base64 = { workspace = true }
+once_cell = { workspace = true }
+urlencoding = "2"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }

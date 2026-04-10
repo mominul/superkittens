@@ -1,0 +1,32 @@
+[package]
+name = "supertokens-axum"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "SuperTokens Axum integration — middleware, extractors, and request/response adapters"
+
+[dependencies]
+supertokens = { path = "../supertokens" }
+axum = { workspace = true }
+axum-core = { workspace = true }
+tower = { workspace = true }
+tower-layer = { workspace = true }
+http = { workspace = true }
+http-body-util = { workspace = true }
+async-trait = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+bytes = "1"
+url = "2"
+urlencoding = "2"
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "full"] }
+async-trait = { workspace = true }
+
+[[example]]
+name = "axum_emailpassword"
+required-features = []

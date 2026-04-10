@@ -1,0 +1,17 @@
+pub const SUPPORTED_CDI_VERSIONS: &[&str] = &["5.4"];
+pub const VERSION: &str = "0.1.0";
+pub const TELEMETRY: &str = "/telemetry";
+pub const USER_COUNT: &str = "/users/count";
+pub const USER_DELETE: &str = "/user/remove";
+pub const USERS: &str = "/users";
+pub const TELEMETRY_SUPERTOKENS_API_URL: &str = "https://api.supertokens.com/0/st/telemetry";
+pub const TELEMETRY_SUPERTOKENS_API_VERSION: &str = "3";
+pub const ERROR_MESSAGE_KEY: &str = "message";
+pub const API_KEY_HEADER: &str = "api-key";
+pub const RID_KEY_HEADER: &str = "rid";
+pub const FDI_KEY_HEADER: &str = "fdi-version";
+pub const API_VERSION: &str = "/apiversion";
+pub const API_VERSION_HEADER: &str = "cdi-version";
+pub const DASHBOARD_VERSION: &str = "0.15";
+pub const ONE_YEAR_IN_MS: u64 = 31_536_000_000;
+pub const RATE_LIMIT_STATUS_CODE: u16 = 429;
