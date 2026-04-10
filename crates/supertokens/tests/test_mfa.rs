@@ -17,7 +17,7 @@ fn make_mfa_impl() -> RecipeImplementationImpl {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires full MFA recipe implementation (currently stubbed)"]
 async fn test_get_factors_setup_for_user_empty() {
     common::reset();
     common::init_with_session().unwrap();
@@ -45,7 +45,7 @@ async fn test_get_factors_setup_for_user_empty() {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires full MFA recipe implementation (currently stubbed)"]
 async fn test_add_and_get_required_secondary_factors() {
     common::reset();
     common::init_with_session().unwrap();
@@ -79,7 +79,7 @@ async fn test_add_and_get_required_secondary_factors() {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires full MFA recipe implementation (currently stubbed)"]
 async fn test_remove_required_secondary_factor() {
     common::reset();
     common::init_with_session().unwrap();
@@ -118,7 +118,7 @@ async fn test_remove_required_secondary_factor() {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires full MFA recipe implementation (currently stubbed)"]
 async fn test_add_duplicate_factor() {
     common::reset();
     common::init_with_session().unwrap();

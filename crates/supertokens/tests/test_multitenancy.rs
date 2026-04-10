@@ -22,7 +22,7 @@ fn unique_tenant_id() -> String {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires SuperTokens Core with multitenancy license"]
 async fn test_create_tenant() {
     common::reset();
     common::init_with_session().unwrap();
@@ -45,7 +45,7 @@ async fn test_create_tenant() {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires SuperTokens Core with multitenancy license"]
 async fn test_create_tenant_twice() {
     common::reset();
     common::init_with_session().unwrap();
@@ -77,7 +77,7 @@ async fn test_create_tenant_twice() {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires SuperTokens Core with multitenancy license"]
 async fn test_get_tenant() {
     common::reset();
     common::init_with_session().unwrap();
@@ -106,7 +106,7 @@ async fn test_get_tenant() {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires SuperTokens Core with multitenancy license"]
 async fn test_get_nonexistent_tenant() {
     common::reset();
     common::init_with_session().unwrap();
@@ -131,7 +131,7 @@ async fn test_get_nonexistent_tenant() {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires SuperTokens Core with multitenancy license"]
 async fn test_list_all_tenants() {
     common::reset();
     common::init_with_session().unwrap();
@@ -158,7 +158,7 @@ async fn test_list_all_tenants() {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires SuperTokens Core with multitenancy license"]
 async fn test_delete_tenant() {
     common::reset();
     common::init_with_session().unwrap();
@@ -187,7 +187,7 @@ async fn test_delete_tenant() {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires SuperTokens Core with multitenancy license"]
 async fn test_delete_nonexistent_tenant() {
     common::reset();
     common::init_with_session().unwrap();
@@ -212,7 +212,7 @@ async fn test_delete_nonexistent_tenant() {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires SuperTokens Core with multitenancy license"]
 async fn test_create_tenant_with_config() {
     common::reset();
     common::init_with_session().unwrap();

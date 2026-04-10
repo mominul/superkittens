@@ -9,6 +9,7 @@ use crate::user_context::UserContext;
 
 pub struct RecipeImplementationImpl {
     pub querier: Querier,
+    pub jwks_domain: String,
 }
 
 #[async_trait]
@@ -23,6 +24,7 @@ impl RecipeInterface for RecipeImplementationImpl {
         let mut body = serde_json::json!({
             "payload": payload,
             "algorithm": "RS256",
+            "jwksDomain": self.jwks_domain,
         });
         if let Some(v) = validity_seconds {
             body["validity"] = serde_json::json!(v);

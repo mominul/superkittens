@@ -8,12 +8,15 @@ use supertokens::recipe::jwt::types::*;
 
 fn make_jwt_impl() -> RecipeImplementationImpl {
     let querier = Querier::get_instance(Some("jwt".to_string())).unwrap();
-    RecipeImplementationImpl { querier }
+    RecipeImplementationImpl {
+        querier,
+        jwks_domain: "http://api.supertokens.io".to_string(),
+    }
 }
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires fix: /recipe/jwt endpoint changed in CDI 5.4"]
 async fn test_create_jwt_with_default_validity() {
     common::reset();
     common::init_with_session().unwrap();
@@ -65,7 +68,7 @@ async fn test_create_jwt_with_custom_validity() {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires fix: /recipe/jwt endpoint changed in CDI 5.4"]
 async fn test_create_jwt_with_payload() {
     common::reset();
     common::init_with_session().unwrap();

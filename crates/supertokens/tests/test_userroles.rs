@@ -12,6 +12,10 @@ fn make_userroles_impl() -> RecipeImplementationImpl {
     RecipeImplementationImpl { querier }
 }
 
+fn unique_role() -> String {
+    format!("role-{}", uuid::Uuid::new_v4().simple())
+}
+
 // ===========================================================================
 // Create New Role or Add Permissions
 // (ported from test_create_new_role_or_add_permissions.py)
@@ -26,9 +30,10 @@ async fn test_create_new_role() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     let result = recipe
-        .create_new_role_or_add_permissions("admin", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &[], &mut ctx)
         .await
         .unwrap();
 
@@ -46,15 +51,16 @@ async fn test_create_new_role_twice() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     let result1 = recipe
-        .create_new_role_or_add_permissions("admin", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &[], &mut ctx)
         .await
         .unwrap();
     assert!(result1.created_new_role);
 
     let result2 = recipe
-        .create_new_role_or_add_permissions("admin", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &[], &mut ctx)
         .await
         .unwrap();
     assert!(
@@ -74,17 +80,18 @@ async fn test_create_new_role_with_permissions() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     let perms = vec!["read".to_string(), "write".to_string()];
     let result = recipe
-        .create_new_role_or_add_permissions("editor", &perms, &mut ctx)
+        .create_new_role_or_add_permissions(&role, &perms, &mut ctx)
         .await
         .unwrap();
     assert!(result.created_new_role);
 
     // Verify permissions were added
     let perms_result = recipe
-        .get_permissions_for_role("editor", &mut ctx)
+        .get_permissions_for_role(&role, &mut ctx)
         .await
         .unwrap();
     match perms_result {
@@ -107,23 +114,24 @@ async fn test_add_permissions_to_existing_role() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     // Create role with initial perms
     recipe
-        .create_new_role_or_add_permissions("admin", &["read".to_string()], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &["read".to_string()], &mut ctx)
         .await
         .unwrap();
 
     // Add more perms
     let result = recipe
-        .create_new_role_or_add_permissions("admin", &["write".to_string()], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &["write".to_string()], &mut ctx)
         .await
         .unwrap();
     assert!(!result.created_new_role);
 
     // Verify both permissions exist
     let perms_result = recipe
-        .get_permissions_for_role("admin", &mut ctx)
+        .get_permissions_for_role(&role, &mut ctx)
         .await
         .unwrap();
     match perms_result {
@@ -146,22 +154,23 @@ async fn test_add_duplicate_permission() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     recipe
-        .create_new_role_or_add_permissions("admin", &["read".to_string()], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &["read".to_string()], &mut ctx)
         .await
         .unwrap();
 
     // Adding same permission again should not error
     let result = recipe
-        .create_new_role_or_add_permissions("admin", &["read".to_string()], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &["read".to_string()], &mut ctx)
         .await
         .unwrap();
     assert!(!result.created_new_role);
 
     // Should still have only one "read"
     let perms_result = recipe
-        .get_permissions_for_role("admin", &mut ctx)
+        .get_permissions_for_role(&role, &mut ctx)
         .await
         .unwrap();
     match perms_result {
@@ -192,16 +201,17 @@ async fn test_add_new_role_to_user() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     // Create role first
     recipe
-        .create_new_role_or_add_permissions("admin", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &[], &mut ctx)
         .await
         .unwrap();
 
     let user_id = uuid::Uuid::new_v4().to_string();
     let result = recipe
-        .add_role_to_user(&user_id, "admin", "public", &mut ctx)
+        .add_role_to_user(&user_id, &role, "public", &mut ctx)
         .await
         .unwrap();
 
@@ -226,21 +236,22 @@ async fn test_add_duplicate_role_to_user() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     recipe
-        .create_new_role_or_add_permissions("admin", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &[], &mut ctx)
         .await
         .unwrap();
 
     let user_id = uuid::Uuid::new_v4().to_string();
     recipe
-        .add_role_to_user(&user_id, "admin", "public", &mut ctx)
+        .add_role_to_user(&user_id, &role, "public", &mut ctx)
         .await
         .unwrap();
 
     // Add same role again
     let result = recipe
-        .add_role_to_user(&user_id, "admin", "public", &mut ctx)
+        .add_role_to_user(&user_id, &role, "public", &mut ctx)
         .await
         .unwrap();
 
@@ -268,7 +279,7 @@ async fn test_add_unknown_role_to_user() {
 
     let user_id = uuid::Uuid::new_v4().to_string();
     let result = recipe
-        .add_role_to_user(&user_id, "nonexistent_role", "public", &mut ctx)
+        .add_role_to_user(&user_id, &unique_role(), "public", &mut ctx)
         .await
         .unwrap();
 
@@ -294,24 +305,26 @@ async fn test_get_roles_for_user() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role1 = unique_role();
+    let role2 = unique_role();
 
     // Create roles
     recipe
-        .create_new_role_or_add_permissions("admin", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role1, &[], &mut ctx)
         .await
         .unwrap();
     recipe
-        .create_new_role_or_add_permissions("editor", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role2, &[], &mut ctx)
         .await
         .unwrap();
 
     let user_id = uuid::Uuid::new_v4().to_string();
     recipe
-        .add_role_to_user(&user_id, "admin", "public", &mut ctx)
+        .add_role_to_user(&user_id, &role1, "public", &mut ctx)
         .await
         .unwrap();
     recipe
-        .add_role_to_user(&user_id, "editor", "public", &mut ctx)
+        .add_role_to_user(&user_id, &role2, "public", &mut ctx)
         .await
         .unwrap();
 
@@ -321,8 +334,8 @@ async fn test_get_roles_for_user() {
         .unwrap();
 
     assert_eq!(result.roles.len(), 2);
-    assert!(result.roles.contains(&"admin".to_string()));
-    assert!(result.roles.contains(&"editor".to_string()));
+    assert!(result.roles.contains(&role1));
+    assert!(result.roles.contains(&role2));
 
     common::reset();
 }
@@ -341,25 +354,26 @@ async fn test_get_users_that_have_role() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     recipe
-        .create_new_role_or_add_permissions("admin", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &[], &mut ctx)
         .await
         .unwrap();
 
     let user1 = uuid::Uuid::new_v4().to_string();
     let user2 = uuid::Uuid::new_v4().to_string();
     recipe
-        .add_role_to_user(&user1, "admin", "public", &mut ctx)
+        .add_role_to_user(&user1, &role, "public", &mut ctx)
         .await
         .unwrap();
     recipe
-        .add_role_to_user(&user2, "admin", "public", &mut ctx)
+        .add_role_to_user(&user2, &role, "public", &mut ctx)
         .await
         .unwrap();
 
     let result = recipe
-        .get_users_that_have_role("admin", "public", &mut ctx)
+        .get_users_that_have_role(&role, "public", &mut ctx)
         .await
         .unwrap();
 
@@ -386,7 +400,7 @@ async fn test_get_users_for_unknown_role() {
     let mut ctx = common::new_user_context();
 
     let result = recipe
-        .get_users_that_have_role("nonexistent", "public", &mut ctx)
+        .get_users_that_have_role(&unique_role(), "public", &mut ctx)
         .await
         .unwrap();
 
@@ -412,20 +426,21 @@ async fn test_remove_role_from_user() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     recipe
-        .create_new_role_or_add_permissions("admin", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &[], &mut ctx)
         .await
         .unwrap();
 
     let user_id = uuid::Uuid::new_v4().to_string();
     recipe
-        .add_role_to_user(&user_id, "admin", "public", &mut ctx)
+        .add_role_to_user(&user_id, &role, "public", &mut ctx)
         .await
         .unwrap();
 
     let result = recipe
-        .remove_user_role(&user_id, "admin", "public", &mut ctx)
+        .remove_user_role(&user_id, &role, "public", &mut ctx)
         .await
         .unwrap();
 
@@ -455,15 +470,16 @@ async fn test_remove_unassigned_role_from_user() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     recipe
-        .create_new_role_or_add_permissions("admin", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &[], &mut ctx)
         .await
         .unwrap();
 
     let user_id = uuid::Uuid::new_v4().to_string();
     let result = recipe
-        .remove_user_role(&user_id, "admin", "public", &mut ctx)
+        .remove_user_role(&user_id, &role, "public", &mut ctx)
         .await
         .unwrap();
 
@@ -489,7 +505,7 @@ async fn test_remove_nonexistent_role_from_user() {
 
     let user_id = uuid::Uuid::new_v4().to_string();
     let result = recipe
-        .remove_user_role(&user_id, "nonexistent", "public", &mut ctx)
+        .remove_user_role(&user_id, &unique_role(), "public", &mut ctx)
         .await
         .unwrap();
 
@@ -515,21 +531,22 @@ async fn test_create_and_delete_role() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     recipe
-        .create_new_role_or_add_permissions("admin", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &[], &mut ctx)
         .await
         .unwrap();
 
     // Assign to a user
     let user_id = uuid::Uuid::new_v4().to_string();
     recipe
-        .add_role_to_user(&user_id, "admin", "public", &mut ctx)
+        .add_role_to_user(&user_id, &role, "public", &mut ctx)
         .await
         .unwrap();
 
     // Delete the role
-    let result = recipe.delete_role("admin", &mut ctx).await.unwrap();
+    let result = recipe.delete_role(&role, &mut ctx).await.unwrap();
     assert!(result.did_role_exist, "Role should have existed");
 
     // Verify role is gone from user
@@ -552,7 +569,7 @@ async fn test_delete_nonexistent_role() {
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
 
-    let result = recipe.delete_role("nonexistent", &mut ctx).await.unwrap();
+    let result = recipe.delete_role(&unique_role(), &mut ctx).await.unwrap();
     assert!(!result.did_role_exist, "Role should not have existed");
 
     common::reset();
@@ -572,15 +589,16 @@ async fn test_get_permissions_for_role() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     let perms = vec!["read".to_string(), "write".to_string(), "delete".to_string()];
     recipe
-        .create_new_role_or_add_permissions("admin", &perms, &mut ctx)
+        .create_new_role_or_add_permissions(&role, &perms, &mut ctx)
         .await
         .unwrap();
 
     let result = recipe
-        .get_permissions_for_role("admin", &mut ctx)
+        .get_permissions_for_role(&role, &mut ctx)
         .await
         .unwrap();
 
@@ -608,7 +626,7 @@ async fn test_get_permissions_for_nonexistent_role() {
     let mut ctx = common::new_user_context();
 
     let result = recipe
-        .get_permissions_for_role("nonexistent", &mut ctx)
+        .get_permissions_for_role(&unique_role(), &mut ctx)
         .await
         .unwrap();
 
@@ -634,16 +652,17 @@ async fn test_remove_permissions_from_role() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     let perms = vec!["read".to_string(), "write".to_string(), "delete".to_string()];
     recipe
-        .create_new_role_or_add_permissions("admin", &perms, &mut ctx)
+        .create_new_role_or_add_permissions(&role, &perms, &mut ctx)
         .await
         .unwrap();
 
     // Remove "write"
     let result = recipe
-        .remove_permissions_from_role("admin", &["write".to_string()], &mut ctx)
+        .remove_permissions_from_role(&role, &["write".to_string()], &mut ctx)
         .await
         .unwrap();
 
@@ -651,7 +670,7 @@ async fn test_remove_permissions_from_role() {
 
     // Verify
     let perms_result = recipe
-        .get_permissions_for_role("admin", &mut ctx)
+        .get_permissions_for_role(&role, &mut ctx)
         .await
         .unwrap();
     match perms_result {
@@ -678,7 +697,7 @@ async fn test_remove_permissions_from_unknown_role() {
     let mut ctx = common::new_user_context();
 
     let result = recipe
-        .remove_permissions_from_role("nonexistent", &["read".to_string()], &mut ctx)
+        .remove_permissions_from_role(&unique_role(), &["read".to_string()], &mut ctx)
         .await
         .unwrap();
 
@@ -704,33 +723,38 @@ async fn test_get_roles_that_have_permission() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role1 = unique_role();
+    let role2 = unique_role();
+    // Use unique permission names to avoid pollution from other tests
+    let perm_read = format!("read-{}", uuid::Uuid::new_v4().simple());
+    let perm_write = format!("write-{}", uuid::Uuid::new_v4().simple());
 
     recipe
-        .create_new_role_or_add_permissions("admin", &["read".to_string(), "write".to_string()], &mut ctx)
+        .create_new_role_or_add_permissions(&role1, &[perm_read.clone(), perm_write.clone()], &mut ctx)
         .await
         .unwrap();
     recipe
-        .create_new_role_or_add_permissions("viewer", &["read".to_string()], &mut ctx)
+        .create_new_role_or_add_permissions(&role2, &[perm_read.clone()], &mut ctx)
         .await
         .unwrap();
 
     let result = recipe
-        .get_roles_that_have_permission("read", &mut ctx)
+        .get_roles_that_have_permission(&perm_read, &mut ctx)
         .await
         .unwrap();
 
     assert_eq!(result.roles.len(), 2);
-    assert!(result.roles.contains(&"admin".to_string()));
-    assert!(result.roles.contains(&"viewer".to_string()));
+    assert!(result.roles.contains(&role1));
+    assert!(result.roles.contains(&role2));
 
-    // "write" should only match "admin"
+    // perm_write should only match role1
     let result2 = recipe
-        .get_roles_that_have_permission("write", &mut ctx)
+        .get_roles_that_have_permission(&perm_write, &mut ctx)
         .await
         .unwrap();
 
     assert_eq!(result2.roles.len(), 1);
-    assert!(result2.roles.contains(&"admin".to_string()));
+    assert!(result2.roles.contains(&role1));
 
     common::reset();
 }
@@ -746,7 +770,7 @@ async fn test_get_roles_for_unknown_permission() {
     let mut ctx = common::new_user_context();
 
     let result = recipe
-        .get_roles_that_have_permission("nonexistent", &mut ctx)
+        .get_roles_that_have_permission(&format!("nonexistent-{}", uuid::Uuid::new_v4()), &mut ctx)
         .await
         .unwrap();
 
@@ -757,7 +781,6 @@ async fn test_get_roles_for_unknown_permission() {
 
 // ===========================================================================
 // Get All Roles
-// (ported from test_config.py::test_recipe_works_without_config)
 // ===========================================================================
 
 #[tokio::test]
@@ -769,27 +792,29 @@ async fn test_get_all_roles() {
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role1 = unique_role();
+    let role2 = unique_role();
+    let role3 = unique_role();
 
     // Create some roles
     recipe
-        .create_new_role_or_add_permissions("admin", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role1, &[], &mut ctx)
         .await
         .unwrap();
     recipe
-        .create_new_role_or_add_permissions("editor", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role2, &[], &mut ctx)
         .await
         .unwrap();
     recipe
-        .create_new_role_or_add_permissions("viewer", &[], &mut ctx)
+        .create_new_role_or_add_permissions(&role3, &[], &mut ctx)
         .await
         .unwrap();
 
     let result = recipe.get_all_roles(&mut ctx).await.unwrap();
 
-    assert!(result.roles.len() >= 3);
-    assert!(result.roles.contains(&"admin".to_string()));
-    assert!(result.roles.contains(&"editor".to_string()));
-    assert!(result.roles.contains(&"viewer".to_string()));
+    assert!(result.roles.contains(&role1));
+    assert!(result.roles.contains(&role2));
+    assert!(result.roles.contains(&role3));
 
     common::reset();
 }
@@ -801,17 +826,18 @@ async fn test_get_all_roles() {
 
 #[tokio::test]
 #[serial]
-#[ignore = "requires running SuperTokens Core"]
+#[ignore = "requires SuperTokens Core with multitenancy license"]
 async fn test_multitenancy_in_user_roles() {
     common::reset();
     common::init_with_session().unwrap();
 
     let recipe = make_userroles_impl();
     let mut ctx = common::new_user_context();
+    let role = unique_role();
 
     // Create a role
     recipe
-        .create_new_role_or_add_permissions("admin", &["read".to_string()], &mut ctx)
+        .create_new_role_or_add_permissions(&role, &["read".to_string()], &mut ctx)
         .await
         .unwrap();
 
@@ -819,7 +845,7 @@ async fn test_multitenancy_in_user_roles() {
 
     // Assign role in tenant "public"
     recipe
-        .add_role_to_user(&user_id, "admin", "public", &mut ctx)
+        .add_role_to_user(&user_id, &role, "public", &mut ctx)
         .await
         .unwrap();
 
@@ -828,7 +854,7 @@ async fn test_multitenancy_in_user_roles() {
         .get_roles_for_user(&user_id, "public", &mut ctx)
         .await
         .unwrap();
-    assert!(roles_public.roles.contains(&"admin".to_string()));
+    assert!(roles_public.roles.contains(&role));
 
     // User should NOT have role in a different tenant
     let roles_other = recipe

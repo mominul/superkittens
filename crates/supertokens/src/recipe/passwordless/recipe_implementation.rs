@@ -211,6 +211,7 @@ impl RecipeInterface for RecipeImplementationImpl {
                 );
                 let created_new_recipe_user = response
                     .get("createdNewRecipeUser")
+                    .or_else(|| response.get("createdNewUser"))
                     .and_then(|v| v.as_bool())
                     .unwrap_or(false);
                 Ok(ConsumeCodeResult::Ok {
