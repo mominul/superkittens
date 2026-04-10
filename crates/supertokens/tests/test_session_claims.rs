@@ -45,10 +45,7 @@ fn test_primitive_claim_get_value_set_by_add_to_payload() {
     let claim = PrimitiveClaim::new("test-claim", None);
     let mut payload = json!({});
     claim.add_to_payload(&mut payload, json!("hello"));
-    assert_eq!(
-        claim.get_value_from_payload(&payload),
-        Some(json!("hello"))
-    );
+    assert_eq!(claim.get_value_from_payload(&payload), Some(json!("hello")));
 }
 
 #[test]
@@ -405,7 +402,8 @@ async fn test_array_includes_all_validator_all_present() {
     let claim = PrimitiveArrayClaim::new("permissions", None);
     let validator = claim.includes_all(vec![json!("read"), json!("write")], None, None);
     let ctx = UserContext::new();
-    let payload = json!({"permissions": {"v": ["read", "write", "delete"], "t": get_timestamp_ms()}});
+    let payload =
+        json!({"permissions": {"v": ["read", "write", "delete"], "t": get_timestamp_ms()}});
     let result = validator.validate(&payload, &ctx).await;
     assert!(result.is_valid);
 }
@@ -538,8 +536,8 @@ async fn test_array_default_max_age_expires_old_values() {
 #[tokio::test]
 async fn test_array_explicit_max_age_overrides_default() {
     let claim = PrimitiveArrayClaim::new("roles", Some(5)); // 5 second default
-    // Explicit max_age of None won't help here since None means "use default"
-    // But explicit Some(999999) should accept old values
+                                                            // Explicit max_age of None won't help here since None means "use default"
+                                                            // But explicit Some(999999) should accept old values
     let validator = claim.includes(json!("admin"), Some(999999999), None);
     let ctx = UserContext::new();
     // Fresh enough for 999999999 seconds
@@ -560,11 +558,8 @@ fn test_primitive_claim_has_value_validator_with_id() {
     assert_eq!(validator.get_id(), "test-claim");
 
     // With an explicit id, it should use that instead
-    let validator_custom = claim.has_value_validator(
-        json!("expected"),
-        None,
-        Some("custom-id".to_string()),
-    );
+    let validator_custom =
+        claim.has_value_validator(json!("expected"), None, Some("custom-id".to_string()));
     assert_eq!(validator_custom.get_id(), "custom-id");
 }
 

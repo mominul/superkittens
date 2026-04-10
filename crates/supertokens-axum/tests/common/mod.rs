@@ -5,14 +5,12 @@ use std::sync::Arc;
 use supertokens::querier::Querier;
 use supertokens::recipe_module::RecipeModule;
 use supertokens::user_context::UserContext;
-use supertokens::{InputAppInfo, SupertokensConfig, SupertokensInit, Supertokens};
+use supertokens::{InputAppInfo, Supertokens, SupertokensConfig, SupertokensInit};
 
 /// Returns the SuperTokens Core URL from env vars, defaulting to http://localhost:3567.
 pub fn core_url() -> String {
-    let host =
-        std::env::var("SUPERTOKENS_CORE_HOST").unwrap_or_else(|_| "localhost".to_string());
-    let port =
-        std::env::var("SUPERTOKENS_CORE_PORT").unwrap_or_else(|_| "3567".to_string());
+    let host = std::env::var("SUPERTOKENS_CORE_HOST").unwrap_or_else(|_| "localhost".to_string());
+    let port = std::env::var("SUPERTOKENS_CORE_PORT").unwrap_or_else(|_| "3567".to_string());
     format!("http://{}:{}", host, port)
 }
 
@@ -86,12 +84,10 @@ pub fn init_with_session_config(
     Querier::init(hosts, None, None, false);
 
     let app_info_normalised = supertokens::AppInfo::from_input(&app_info_input)?;
-    let session_recipe = Arc::new(
-        supertokens::recipe::session::recipe::SessionRecipe::new(
-            app_info_normalised,
-            session_config,
-        )?,
-    );
+    let session_recipe = Arc::new(supertokens::recipe::session::recipe::SessionRecipe::new(
+        app_info_normalised,
+        session_config,
+    )?);
 
     Supertokens::init(SupertokensInit {
         app_info: app_info_input,

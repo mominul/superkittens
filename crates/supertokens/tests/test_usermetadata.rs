@@ -26,10 +26,7 @@ async fn test_get_empty_metadata() {
     let mut ctx = common::new_user_context();
 
     let user_id = uuid::Uuid::new_v4().to_string();
-    let result = recipe
-        .get_user_metadata(&user_id, &mut ctx)
-        .await
-        .unwrap();
+    let result = recipe.get_user_metadata(&user_id, &mut ctx).await.unwrap();
 
     assert!(
         result.metadata.is_empty(),
@@ -57,7 +54,10 @@ async fn test_update_and_get_metadata() {
     let user_id = uuid::Uuid::new_v4().to_string();
 
     let mut metadata_update = serde_json::Map::new();
-    metadata_update.insert("name".to_string(), serde_json::Value::String("test".to_string()));
+    metadata_update.insert(
+        "name".to_string(),
+        serde_json::Value::String("test".to_string()),
+    );
     metadata_update.insert("age".to_string(), serde_json::json!(25));
 
     let update_result = recipe
@@ -69,10 +69,7 @@ async fn test_update_and_get_metadata() {
     assert_eq!(update_result.metadata.get("age").unwrap(), 25);
 
     // Get and verify
-    let get_result = recipe
-        .get_user_metadata(&user_id, &mut ctx)
-        .await
-        .unwrap();
+    let get_result = recipe.get_user_metadata(&user_id, &mut ctx).await.unwrap();
 
     assert_eq!(get_result.metadata.get("name").unwrap(), "test");
     assert_eq!(get_result.metadata.get("age").unwrap(), 25);
@@ -114,10 +111,7 @@ async fn test_metadata_shallow_merge() {
         .unwrap();
 
     // Verify both "a" and "b" exist
-    let result = recipe
-        .get_user_metadata(&user_id, &mut ctx)
-        .await
-        .unwrap();
+    let result = recipe.get_user_metadata(&user_id, &mut ctx).await.unwrap();
 
     assert_eq!(result.metadata.get("a").unwrap(), "1");
     assert_eq!(result.metadata.get("b").unwrap(), "2");
@@ -131,13 +125,18 @@ async fn test_metadata_shallow_merge() {
         .unwrap();
 
     // Verify "a" changed but "b" remains
-    let result2 = recipe
-        .get_user_metadata(&user_id, &mut ctx)
-        .await
-        .unwrap();
+    let result2 = recipe.get_user_metadata(&user_id, &mut ctx).await.unwrap();
 
-    assert_eq!(result2.metadata.get("a").unwrap(), "3", "\"a\" should be updated to \"3\"");
-    assert_eq!(result2.metadata.get("b").unwrap(), "2", "\"b\" should remain unchanged");
+    assert_eq!(
+        result2.metadata.get("a").unwrap(),
+        "3",
+        "\"a\" should be updated to \"3\""
+    );
+    assert_eq!(
+        result2.metadata.get("b").unwrap(),
+        "2",
+        "\"b\" should remain unchanged"
+    );
 
     common::reset();
 }
@@ -161,7 +160,10 @@ async fn test_clear_metadata() {
 
     // Set some metadata
     let mut metadata_update = serde_json::Map::new();
-    metadata_update.insert("name".to_string(), serde_json::Value::String("test".to_string()));
+    metadata_update.insert(
+        "name".to_string(),
+        serde_json::Value::String("test".to_string()),
+    );
     metadata_update.insert("age".to_string(), serde_json::json!(25));
 
     recipe
@@ -170,11 +172,11 @@ async fn test_clear_metadata() {
         .unwrap();
 
     // Verify metadata was set
-    let before_clear = recipe
-        .get_user_metadata(&user_id, &mut ctx)
-        .await
-        .unwrap();
-    assert!(!before_clear.metadata.is_empty(), "Metadata should not be empty before clear");
+    let before_clear = recipe.get_user_metadata(&user_id, &mut ctx).await.unwrap();
+    assert!(
+        !before_clear.metadata.is_empty(),
+        "Metadata should not be empty before clear"
+    );
 
     // Clear metadata
     recipe
@@ -183,10 +185,7 @@ async fn test_clear_metadata() {
         .unwrap();
 
     // Verify metadata is now empty
-    let after_clear = recipe
-        .get_user_metadata(&user_id, &mut ctx)
-        .await
-        .unwrap();
+    let after_clear = recipe.get_user_metadata(&user_id, &mut ctx).await.unwrap();
 
     assert!(
         after_clear.metadata.is_empty(),

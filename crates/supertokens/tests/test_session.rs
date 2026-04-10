@@ -1,7 +1,7 @@
 mod common;
 
-use serial_test::serial;
 use serde_json::json;
+use serial_test::serial;
 
 use supertokens::recipe::session::interfaces::RecipeInterface;
 use supertokens::recipe::session::recipe_implementation::RecipeImplementationImpl;
@@ -11,8 +11,7 @@ use supertokens::types::user::RecipeUserId;
 
 fn make_session_recipe_impl() -> RecipeImplementationImpl {
     let app_info = supertokens::AppInfo::from_input(&common::test_app_info()).unwrap();
-    let querier =
-        supertokens::querier::Querier::get_instance(Some("session".to_string())).unwrap();
+    let querier = supertokens::querier::Querier::get_instance(Some("session".to_string())).unwrap();
     let config = validate_and_normalise_user_input(&app_info, SessionConfig::default()).unwrap();
     RecipeImplementationImpl {
         querier,
@@ -134,10 +133,7 @@ async fn test_revoke_session() {
     let handle = session.get_handle().to_string();
 
     // Revoke the session
-    let revoked = recipe_impl
-        .revoke_session(&handle, &mut ctx)
-        .await
-        .unwrap();
+    let revoked = recipe_impl.revoke_session(&handle, &mut ctx).await.unwrap();
     assert!(revoked, "Session should be revoked");
 
     // Verify session no longer exists
@@ -349,11 +345,7 @@ async fn test_update_session_data_nonexistent_handle() {
     let mut ctx = common::new_user_context();
 
     let updated = recipe_impl
-        .update_session_data_in_database(
-            "nonexistent-handle",
-            json!({"data": "value"}),
-            &mut ctx,
-        )
+        .update_session_data_in_database("nonexistent-handle", json!({"data": "value"}), &mut ctx)
         .await
         .unwrap();
     assert!(!updated, "Should return false for nonexistent handle");
@@ -394,11 +386,7 @@ async fn test_merge_into_access_token_payload() {
 
     // Merge additional data
     let merged = recipe_impl
-        .merge_into_access_token_payload(
-            &handle,
-            json!({"extra": "data"}),
-            &mut ctx,
-        )
+        .merge_into_access_token_payload(&handle, json!({"extra": "data"}), &mut ctx)
         .await
         .unwrap();
     assert!(merged);
@@ -409,10 +397,7 @@ async fn test_merge_into_access_token_payload() {
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(
-        info.custom_claims_in_access_token_payload["extra"],
-        "data"
-    );
+    assert_eq!(info.custom_claims_in_access_token_payload["extra"], "data");
 
     common::reset();
 }
@@ -592,7 +577,10 @@ async fn test_get_session_no_token_session_not_required() {
         .await
         .unwrap();
 
-    assert!(result.is_none(), "Should return None when no token and session not required");
+    assert!(
+        result.is_none(),
+        "Should return None when no token and session not required"
+    );
 
     common::reset();
 }
@@ -694,7 +682,10 @@ async fn test_session_container_update_and_get_data() {
         .unwrap();
 
     // Get session data from database
-    let data = session.get_session_data_from_database(&mut ctx).await.unwrap();
+    let data = session
+        .get_session_data_from_database(&mut ctx)
+        .await
+        .unwrap();
     assert_eq!(data["initial"], true);
 
     // Update session data
@@ -704,7 +695,10 @@ async fn test_session_container_update_and_get_data() {
         .unwrap();
 
     // Verify updated
-    let data = session.get_session_data_from_database(&mut ctx).await.unwrap();
+    let data = session
+        .get_session_data_from_database(&mut ctx)
+        .await
+        .unwrap();
     assert_eq!(data["updated"], "value");
     assert!(data.get("initial").is_none(), "Old data should be replaced");
 
@@ -786,7 +780,10 @@ async fn test_session_container_time_created_and_expiry() {
     let expiry = session.get_expiry(&mut ctx).await.unwrap();
 
     assert!(time_created > 0);
-    assert!(expiry > time_created, "Expiry should be after creation time");
+    assert!(
+        expiry > time_created,
+        "Expiry should be after creation time"
+    );
 
     common::reset();
 }
@@ -861,8 +858,14 @@ async fn test_session_tokens_dangerously() {
         .unwrap();
 
     let tokens = session.get_all_session_tokens_dangerously();
-    assert!(!tokens.access_token.is_empty(), "Access token should be present");
-    assert!(!tokens.front_token.is_empty(), "Front token should be present");
+    assert!(
+        !tokens.access_token.is_empty(),
+        "Access token should be present"
+    );
+    assert!(
+        !tokens.front_token.is_empty(),
+        "Front token should be present"
+    );
     assert!(
         tokens.refresh_token.is_some(),
         "Refresh token should be present for new session"
@@ -882,7 +885,8 @@ fn test_parse_jwt_v3_with_kid() {
     use supertokens::recipe::session::jwt::parse_jwt_without_signature_verification;
 
     // Create a minimal JWT with a kid header (v3+ format)
-    let header = base64_url_encode(r#"{"kid":"test-key-id","alg":"RS256","typ":"JWT","version":"3"}"#);
+    let header =
+        base64_url_encode(r#"{"kid":"test-key-id","alg":"RS256","typ":"JWT","version":"3"}"#);
     let payload = base64_url_encode(r#"{"sub":"user1","exp":9999999999}"#);
     let token = format!("{}.{}.signature", header, payload);
 
@@ -1103,10 +1107,7 @@ async fn test_session_verify_with_revoked_session_and_check_database() {
     let handle = session.get_handle().to_string();
 
     // Revoke the session
-    let revoked = recipe_impl
-        .revoke_session(&handle, &mut ctx)
-        .await
-        .unwrap();
+    let revoked = recipe_impl.revoke_session(&handle, &mut ctx).await.unwrap();
     assert!(revoked);
 
     // Without check_database, the token's signature is still valid so
@@ -1164,11 +1165,7 @@ async fn test_session_access_token_payload_after_merge() {
 
     // Merge additional data into access token payload
     let merged = recipe_impl
-        .merge_into_access_token_payload(
-            &handle,
-            json!({"premium": true}),
-            &mut ctx,
-        )
+        .merge_into_access_token_payload(&handle, json!({"premium": true}), &mut ctx)
         .await
         .unwrap();
     assert!(merged);
@@ -1272,7 +1269,9 @@ async fn test_session_change_session_data_does_not_affect_access_token() {
         "Access token payload should be unchanged"
     );
     assert!(
-        info.custom_claims_in_access_token_payload.get("db_key").is_none(),
+        info.custom_claims_in_access_token_payload
+            .get("db_key")
+            .is_none(),
         "Database-only key should not appear in access token payload"
     );
 

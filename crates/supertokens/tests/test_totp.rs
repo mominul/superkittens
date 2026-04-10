@@ -71,7 +71,10 @@ async fn test_list_devices() {
 
     let result = recipe.list_devices(&user_id, &mut ctx).await.unwrap();
 
-    assert!(!result.devices.is_empty(), "Devices list should not be empty");
+    assert!(
+        !result.devices.is_empty(),
+        "Devices list should not be empty"
+    );
     assert!(
         result.devices.iter().any(|d| d.name == "test-device"),
         "Should find the created device"
@@ -151,10 +154,7 @@ async fn test_remove_nonexistent_device() {
         .await
         .unwrap();
 
-    assert!(
-        !result.did_device_exist,
-        "Device should not have existed"
-    );
+    assert!(!result.did_device_exist, "Device should not have existed");
 
     common::reset();
 }

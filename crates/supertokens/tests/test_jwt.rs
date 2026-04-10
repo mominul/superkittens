@@ -75,7 +75,10 @@ async fn test_create_jwt_with_payload() {
 
     let jwt_impl = make_jwt_impl();
     let mut payload = serde_json::Map::new();
-    payload.insert("key".to_string(), serde_json::Value::String("value".to_string()));
+    payload.insert(
+        "key".to_string(),
+        serde_json::Value::String("value".to_string()),
+    );
     payload.insert("num".to_string(), serde_json::json!(42));
     let mut ctx = common::new_user_context();
 

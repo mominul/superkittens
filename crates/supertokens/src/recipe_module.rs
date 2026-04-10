@@ -91,14 +91,18 @@ pub fn set_get_tenant_id(f: GetTenantIdFn) {
 
 #[cfg(feature = "testing")]
 pub fn set_get_tenant_id(f: GetTenantIdFn) {
-    let mut guard = GET_TENANT_ID.write().expect("Failed to acquire write lock on GET_TENANT_ID");
+    let mut guard = GET_TENANT_ID
+        .write()
+        .expect("Failed to acquire write lock on GET_TENANT_ID");
     *guard = Some(f);
 }
 
 /// Reset the tenant ID resolver (testing only).
 #[cfg(feature = "testing")]
 pub fn reset_get_tenant_id() {
-    let mut guard = GET_TENANT_ID.write().expect("Failed to acquire write lock on GET_TENANT_ID");
+    let mut guard = GET_TENANT_ID
+        .write()
+        .expect("Failed to acquire write lock on GET_TENANT_ID");
     *guard = None;
 }
 

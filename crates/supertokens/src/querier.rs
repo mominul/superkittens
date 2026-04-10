@@ -73,7 +73,12 @@ impl Querier {
         network_interceptor: Option<NetworkInterceptor>,
         disable_cache: bool,
     ) {
-        let _ = GLOBAL.set(Self::new_global(hosts, api_key, network_interceptor, disable_cache));
+        let _ = GLOBAL.set(Self::new_global(
+            hosts,
+            api_key,
+            network_interceptor,
+            disable_cache,
+        ));
     }
 
     #[cfg(feature = "testing")]
@@ -84,7 +89,9 @@ impl Querier {
         disable_cache: bool,
     ) {
         let global = Self::new_global(hosts, api_key, network_interceptor, disable_cache);
-        let mut guard = GLOBAL.write().expect("Failed to acquire write lock on Querier global");
+        let mut guard = GLOBAL
+            .write()
+            .expect("Failed to acquire write lock on Querier global");
         *guard = Some(global);
     }
 
@@ -107,7 +114,9 @@ impl Querier {
 
     #[cfg(feature = "testing")]
     pub fn get_instance(rid_to_core: Option<String>) -> Result<Self, SuperTokensError> {
-        let guard = GLOBAL.read().expect("Failed to acquire read lock on Querier global");
+        let guard = GLOBAL
+            .read()
+            .expect("Failed to acquire read lock on Querier global");
         let global = guard.as_ref().ok_or_else(|| {
             raise_general_exception("Querier not initialized. Call Supertokens::init() first.")
         })?;
@@ -129,7 +138,9 @@ impl Querier {
 
     #[cfg(feature = "testing")]
     fn global() -> Arc<QuerierGlobal> {
-        let guard = GLOBAL.read().expect("Failed to acquire read lock on Querier global");
+        let guard = GLOBAL
+            .read()
+            .expect("Failed to acquire read lock on Querier global");
         guard.clone().expect("Querier not initialized")
     }
 
@@ -651,7 +662,9 @@ impl Querier {
     /// Reset global state (testing only).
     #[cfg(feature = "testing")]
     pub fn reset() {
-        let mut guard = GLOBAL.write().expect("Failed to acquire write lock on Querier global");
+        let mut guard = GLOBAL
+            .write()
+            .expect("Failed to acquire write lock on Querier global");
         *guard = None;
     }
 }

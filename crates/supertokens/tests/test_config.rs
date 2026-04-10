@@ -59,14 +59,8 @@ fn test_url_path_normalisation() {
         ("https://127.0.0.1:80/one/two", "/one/two"),
         ("/", ""),
         ("", ""),
-        (
-            "/.netlify/functions/api",
-            "/.netlify/functions/api",
-        ),
-        (
-            "/netlify/.functions/api",
-            "/netlify/.functions/api",
-        ),
+        ("/.netlify/functions/api", "/.netlify/functions/api"),
+        ("/netlify/.functions/api", "/netlify/.functions/api"),
         (
             "app.example.com/.netlify/functions/api",
             "/.netlify/functions/api",
@@ -112,26 +106,17 @@ fn test_url_domain_normalisation() {
         ("http://api.example.com/hello", "http://api.example.com"),
         ("http://api.example.com/", "http://api.example.com"),
         ("http://api.example.com#random2", "http://api.example.com"),
-        (
-            "http://api.example.com:8080",
-            "http://api.example.com:8080",
-        ),
+        ("http://api.example.com:8080", "http://api.example.com:8080"),
         ("api.example.com/", "https://api.example.com"),
         ("api.example.com", "https://api.example.com"),
         ("api.example.com#random", "https://api.example.com"),
         // Note: Rust keeps leading dot in domain (Python strips it)
         (".example.com", "https://.example.com"),
-        (
-            "api.example.com/?hello=1&bye=2",
-            "https://api.example.com",
-        ),
+        ("api.example.com/?hello=1&bye=2", "https://api.example.com"),
         ("localhost", "http://localhost"),
         // Note: Rust forces http:// for localhost (Python preserves https)
         ("https://localhost", "http://localhost"),
-        (
-            "http://api.example.com/one/two",
-            "http://api.example.com",
-        ),
+        ("http://api.example.com/one/two", "http://api.example.com"),
         ("http://1.2.3.4/one/two", "http://1.2.3.4"),
         // Note: Rust forces http:// for IP addresses (Python preserves https)
         ("https://1.2.3.4/one/two", "http://1.2.3.4"),
@@ -256,10 +241,7 @@ async fn test_get_instance_before_init_fails() {
     common::reset();
 
     let result = Supertokens::get_instance();
-    assert!(
-        result.is_err(),
-        "get_instance() before init() should fail"
-    );
+    assert!(result.is_err(), "get_instance() before init() should fail");
 }
 
 #[test]
@@ -431,10 +413,7 @@ fn test_session_config_anti_csrf_explicit_none() {
             ..Default::default()
         },
     );
-    assert_eq!(
-        config.anti_csrf_function_or_string,
-        AntiCsrfConfig::None,
-    );
+    assert_eq!(config.anti_csrf_function_or_string, AntiCsrfConfig::None,);
 }
 
 #[test]

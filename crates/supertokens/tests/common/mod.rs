@@ -2,17 +2,15 @@
 
 use std::sync::Arc;
 
-use supertokens::recipe_module::RecipeModule;
-use supertokens::{InputAppInfo, SupertokensConfig, SupertokensInit, Supertokens};
 use supertokens::querier::Querier;
+use supertokens::recipe_module::RecipeModule;
 use supertokens::UserContext;
+use supertokens::{InputAppInfo, Supertokens, SupertokensConfig, SupertokensInit};
 
 /// Returns the SuperTokens Core URL from env vars, defaulting to http://localhost:3567.
 pub fn core_url() -> String {
-    let host =
-        std::env::var("SUPERTOKENS_CORE_HOST").unwrap_or_else(|_| "localhost".to_string());
-    let port =
-        std::env::var("SUPERTOKENS_CORE_PORT").unwrap_or_else(|_| "3567".to_string());
+    let host = std::env::var("SUPERTOKENS_CORE_HOST").unwrap_or_else(|_| "localhost".to_string());
+    let port = std::env::var("SUPERTOKENS_CORE_PORT").unwrap_or_else(|_| "3567".to_string());
     format!("http://{}:{}", host, port)
 }
 
@@ -114,12 +112,10 @@ pub fn init_with_session_config(
     Querier::init(hosts, None, None, false);
 
     let app_info_normalised = supertokens::AppInfo::from_input(&app_info_input)?;
-    let session_recipe = Arc::new(
-        supertokens::recipe::session::recipe::SessionRecipe::new(
-            app_info_normalised,
-            session_config,
-        )?,
-    );
+    let session_recipe = Arc::new(supertokens::recipe::session::recipe::SessionRecipe::new(
+        app_info_normalised,
+        session_config,
+    )?);
 
     Supertokens::init(SupertokensInit {
         app_info: app_info_input,
@@ -156,9 +152,10 @@ fn parse_connection_uri(
 pub struct NoopEmailDelivery;
 
 #[async_trait::async_trait]
-impl supertokens::ingredients::email_delivery::EmailDeliveryInterface<
-    supertokens::recipe::emailpassword::types::EmailTemplateVars,
-> for NoopEmailDelivery
+impl
+    supertokens::ingredients::email_delivery::EmailDeliveryInterface<
+        supertokens::recipe::emailpassword::types::EmailTemplateVars,
+    > for NoopEmailDelivery
 {
     async fn send_email(
         &self,
@@ -179,12 +176,10 @@ pub fn init_with_emailpassword() -> std::result::Result<(), supertokens::SuperTo
 
     let app_info_normalised = supertokens::AppInfo::from_input(&app_info_input)?;
 
-    let session_recipe = Arc::new(
-        supertokens::recipe::session::recipe::SessionRecipe::new(
-            app_info_normalised.clone(),
-            supertokens::recipe::session::types::SessionConfig::default(),
-        )?,
-    );
+    let session_recipe = Arc::new(supertokens::recipe::session::recipe::SessionRecipe::new(
+        app_info_normalised.clone(),
+        supertokens::recipe::session::types::SessionConfig::default(),
+    )?);
 
     let emailpassword_recipe = Arc::new(
         supertokens::recipe::emailpassword::recipe::EmailPasswordRecipe::new(

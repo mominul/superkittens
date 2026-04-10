@@ -37,7 +37,10 @@ async fn test_create_tenant() {
         .await
         .unwrap();
 
-    assert!(result.created_new, "First creation should set created_new to true");
+    assert!(
+        result.created_new,
+        "First creation should set created_new to true"
+    );
 
     // Cleanup
     mt.delete_tenant(&tenant_id, &mut ctx).await.unwrap();
@@ -60,13 +63,19 @@ async fn test_create_tenant_twice() {
         .create_or_update_tenant(&tenant_id, None, &mut ctx)
         .await
         .unwrap();
-    assert!(result1.created_new, "First creation should set created_new to true");
+    assert!(
+        result1.created_new,
+        "First creation should set created_new to true"
+    );
 
     let result2 = mt
         .create_or_update_tenant(&tenant_id, None, &mut ctx)
         .await
         .unwrap();
-    assert!(!result2.created_new, "Second creation should set created_new to false");
+    assert!(
+        !result2.created_new,
+        "Second creation should set created_new to false"
+    );
 
     // Cleanup
     mt.delete_tenant(&tenant_id, &mut ctx).await.unwrap();
@@ -93,10 +102,7 @@ async fn test_get_tenant() {
         .await
         .unwrap();
 
-    let tenant = mt
-        .get_tenant(&tenant_id, &mut ctx)
-        .await
-        .unwrap();
+    let tenant = mt.get_tenant(&tenant_id, &mut ctx).await.unwrap();
 
     assert!(tenant.is_some(), "Tenant should exist after creation");
     let tenant = tenant.unwrap();
@@ -118,10 +124,7 @@ async fn test_get_nonexistent_tenant() {
     let mut ctx = common::new_user_context();
     let tenant_id = unique_tenant_id();
 
-    let tenant = mt
-        .get_tenant(&tenant_id, &mut ctx)
-        .await
-        .unwrap();
+    let tenant = mt.get_tenant(&tenant_id, &mut ctx).await.unwrap();
 
     assert!(tenant.is_none(), "Non-existent tenant should return None");
 
@@ -142,10 +145,7 @@ async fn test_list_all_tenants() {
     let mt = make_mt_impl();
     let mut ctx = common::new_user_context();
 
-    let result = mt
-        .list_all_tenants(&mut ctx)
-        .await
-        .unwrap();
+    let result = mt.list_all_tenants(&mut ctx).await.unwrap();
 
     assert!(
         result.tenants.iter().any(|t| t.tenant_id == "public"),
@@ -175,12 +175,12 @@ async fn test_delete_tenant() {
         .await
         .unwrap();
 
-    let result = mt
-        .delete_tenant(&tenant_id, &mut ctx)
-        .await
-        .unwrap();
+    let result = mt.delete_tenant(&tenant_id, &mut ctx).await.unwrap();
 
-    assert!(result.did_exist, "Deleting an existing tenant should set did_exist to true");
+    assert!(
+        result.did_exist,
+        "Deleting an existing tenant should set did_exist to true"
+    );
 
     // Verify it's gone
     let tenant = mt.get_tenant(&tenant_id, &mut ctx).await.unwrap();
@@ -200,12 +200,12 @@ async fn test_delete_nonexistent_tenant() {
     let mut ctx = common::new_user_context();
     let tenant_id = unique_tenant_id();
 
-    let result = mt
-        .delete_tenant(&tenant_id, &mut ctx)
-        .await
-        .unwrap();
+    let result = mt.delete_tenant(&tenant_id, &mut ctx).await.unwrap();
 
-    assert!(!result.did_exist, "Deleting a non-existent tenant should set did_exist to false");
+    assert!(
+        !result.did_exist,
+        "Deleting a non-existent tenant should set did_exist to false"
+    );
 
     common::reset();
 }

@@ -56,7 +56,10 @@ async fn test_manually_create_new_user() {
             recipe_user_id,
             created_new_recipe_user,
         } => {
-            assert!(created_new_recipe_user, "Should have created a new recipe user");
+            assert!(
+                created_new_recipe_user,
+                "Should have created a new recipe user"
+            );
             assert!(!user.id.is_empty());
             assert!(!recipe_user_id.get_as_string().is_empty());
         }

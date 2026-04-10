@@ -219,7 +219,10 @@ async fn test_add_new_role_to_user() {
         AddRoleToUserResult::Ok {
             did_user_already_have_role,
         } => {
-            assert!(!did_user_already_have_role, "User should not already have role");
+            assert!(
+                !did_user_already_have_role,
+                "User should not already have role"
+            );
         }
         _ => panic!("Expected Ok"),
     }
@@ -456,7 +459,10 @@ async fn test_remove_role_from_user() {
         .get_roles_for_user(&user_id, "public", &mut ctx)
         .await
         .unwrap();
-    assert!(roles.roles.is_empty(), "User should have no roles after removal");
+    assert!(
+        roles.roles.is_empty(),
+        "User should have no roles after removal"
+    );
 
     common::reset();
 }
@@ -554,7 +560,10 @@ async fn test_create_and_delete_role() {
         .get_roles_for_user(&user_id, "public", &mut ctx)
         .await
         .unwrap();
-    assert!(roles.roles.is_empty(), "User should have no roles after deletion");
+    assert!(
+        roles.roles.is_empty(),
+        "User should have no roles after deletion"
+    );
 
     common::reset();
 }
@@ -591,7 +600,11 @@ async fn test_get_permissions_for_role() {
     let mut ctx = common::new_user_context();
     let role = unique_role();
 
-    let perms = vec!["read".to_string(), "write".to_string(), "delete".to_string()];
+    let perms = vec![
+        "read".to_string(),
+        "write".to_string(),
+        "delete".to_string(),
+    ];
     recipe
         .create_new_role_or_add_permissions(&role, &perms, &mut ctx)
         .await
@@ -654,7 +667,11 @@ async fn test_remove_permissions_from_role() {
     let mut ctx = common::new_user_context();
     let role = unique_role();
 
-    let perms = vec!["read".to_string(), "write".to_string(), "delete".to_string()];
+    let perms = vec![
+        "read".to_string(),
+        "write".to_string(),
+        "delete".to_string(),
+    ];
     recipe
         .create_new_role_or_add_permissions(&role, &perms, &mut ctx)
         .await
@@ -730,7 +747,11 @@ async fn test_get_roles_that_have_permission() {
     let perm_write = format!("write-{}", uuid::Uuid::new_v4().simple());
 
     recipe
-        .create_new_role_or_add_permissions(&role1, &[perm_read.clone(), perm_write.clone()], &mut ctx)
+        .create_new_role_or_add_permissions(
+            &role1,
+            &[perm_read.clone(), perm_write.clone()],
+            &mut ctx,
+        )
         .await
         .unwrap();
     recipe
@@ -774,7 +795,10 @@ async fn test_get_roles_for_unknown_permission() {
         .await
         .unwrap();
 
-    assert!(result.roles.is_empty(), "Should return empty list for unknown permission");
+    assert!(
+        result.roles.is_empty(),
+        "Should return empty list for unknown permission"
+    );
 
     common::reset();
 }

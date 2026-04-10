@@ -38,7 +38,10 @@ fn test_find_max_version_empty() {
 fn test_normalise_http_method() {
     assert_eq!(supertokens::utils::normalise_http_method("GET"), "get");
     assert_eq!(supertokens::utils::normalise_http_method("post"), "post");
-    assert_eq!(supertokens::utils::normalise_http_method("DeLeTe"), "delete");
+    assert_eq!(
+        supertokens::utils::normalise_http_method("DeLeTe"),
+        "delete"
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -85,14 +88,14 @@ fn test_humanize_time() {
         (1000u64, "1 second"),
         (59000, "59 seconds"),
         (60000, "1 minute"),
-        (119000, "1 minute"),    // 1m 59s rounds down to 1 minute
+        (119000, "1 minute"), // 1m 59s rounds down to 1 minute
         (120000, "2 minutes"),
         (3600000, "1 hour"),
-        (3660000, "1 hour"),     // 1h 1m rounds down to 1 hour
+        (3660000, "1 hour"), // 1h 1m rounds down to 1 hour
         // Note: Rust implementation doesn't produce fractional hours like Python's "1.1 hours"
         // It rounds down to whole hours, so 3960000ms (1h 6m) → "1 hour"
         (3960000, "1 hour"),
-        (7260000, "2 hours"),    // 2h 1m
+        (7260000, "2 hours"), // 2h 1m
         (18000000, "5 hours"),
     ];
 

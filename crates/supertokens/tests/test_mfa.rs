@@ -1,12 +1,12 @@
 mod common;
 
-use std::sync::Arc;
 use serial_test::serial;
+use std::sync::Arc;
 
 use supertokens::querier::Querier;
 use supertokens::recipe::multifactorauth::interfaces::RecipeInterface;
 use supertokens::recipe::multifactorauth::recipe_implementation::{
-    RecipeImplementationImpl, add_func_to_get_factors_setup_for_user,
+    add_func_to_get_factors_setup_for_user, RecipeImplementationImpl,
 };
 
 fn make_mfa_impl() -> RecipeImplementationImpl {
@@ -147,11 +147,7 @@ async fn test_add_duplicate_factor() {
         .await
         .unwrap();
 
-    let totp_count = result
-        .factor_ids
-        .iter()
-        .filter(|f| *f == "totp")
-        .count();
+    let totp_count = result.factor_ids.iter().filter(|f| *f == "totp").count();
 
     assert_eq!(
         totp_count, 1,

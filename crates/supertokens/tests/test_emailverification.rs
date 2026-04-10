@@ -47,9 +47,7 @@ async fn create_ep_user(
         .unwrap();
 
     match result {
-        SignUpResult::Ok {
-            recipe_user_id, ..
-        } => (recipe_user_id, email),
+        SignUpResult::Ok { recipe_user_id, .. } => (recipe_user_id, email),
         SignUpResult::EmailAlreadyExists => panic!("Expected Ok, got EmailAlreadyExists"),
     }
 }
@@ -355,7 +353,10 @@ async fn test_create_token_for_already_verified_email() {
         .unwrap();
 
     assert!(
-        matches!(result, CreateEmailVerificationTokenResult::EmailAlreadyVerified),
+        matches!(
+            result,
+            CreateEmailVerificationTokenResult::EmailAlreadyVerified
+        ),
         "Expected EmailAlreadyVerified for already verified email, got {:?}",
         result
     );

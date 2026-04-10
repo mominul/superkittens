@@ -5,14 +5,12 @@ use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Router;
 use http::header::{
-    ACCESS_CONTROL_ALLOW_CREDENTIALS, ACCESS_CONTROL_ALLOW_ORIGIN,
-    ACCESS_CONTROL_EXPOSE_HEADERS, ORIGIN,
+    ACCESS_CONTROL_ALLOW_CREDENTIALS, ACCESS_CONTROL_ALLOW_ORIGIN, ACCESS_CONTROL_EXPOSE_HEADERS,
+    ORIGIN,
 };
 use http::{Request, StatusCode};
 use serial_test::serial;
-use supertokens_axum::{
-    OptionalSession, Session, SuperTokensRouter, VerifySessionLayer,
-};
+use supertokens_axum::{OptionalSession, Session, SuperTokensRouter, VerifySessionLayer};
 use tower::ServiceExt;
 
 // ---------------------------------------------------------------------------
@@ -272,7 +270,10 @@ async fn test_with_supertokens_cors_adds_headers() {
         .to_str()
         .unwrap();
     // SuperTokens default CORS headers must be present
-    assert!(exposed.contains("rid"), "exposed headers should contain rid");
+    assert!(
+        exposed.contains("rid"),
+        "exposed headers should contain rid"
+    );
     assert!(
         exposed.contains("anti-csrf"),
         "exposed headers should contain anti-csrf"

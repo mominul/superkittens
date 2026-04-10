@@ -21,9 +21,8 @@ pub fn register_mfa_factor_setup_callback() {
             let mut params = std::collections::HashMap::new();
             params.insert("userId".to_string(), user_id);
 
-            let path = crate::normalised_url_path::NormalisedURLPath::new(
-                "/recipe/totp/device/list",
-            )?;
+            let path =
+                crate::normalised_url_path::NormalisedURLPath::new("/recipe/totp/device/list")?;
             let response = querier
                 .send_get_request(&path, Some(params), &mut user_context)
                 .await?;
@@ -32,11 +31,8 @@ pub fn register_mfa_factor_setup_callback() {
                 .get("devices")
                 .and_then(|v| v.as_array())
                 .map(|arr| {
-                    arr.iter().any(|d| {
-                        d.get("verified")
-                            .and_then(|v| v.as_bool())
-                            .unwrap_or(false)
-                    })
+                    arr.iter()
+                        .any(|d| d.get("verified").and_then(|v| v.as_bool()).unwrap_or(false))
                 })
                 .unwrap_or(false);
 

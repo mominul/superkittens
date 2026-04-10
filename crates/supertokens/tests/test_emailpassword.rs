@@ -46,14 +46,7 @@ async fn test_signup_with_valid_email_and_password() {
     let email = format!("test+{}@example.com", uuid::Uuid::new_v4());
 
     let result = recipe_impl
-        .sign_up(
-            &email,
-            "validPassword1!",
-            "public",
-            None,
-            None,
-            &mut ctx,
-        )
+        .sign_up(&email, "validPassword1!", "public", None, None, &mut ctx)
         .await;
 
     assert!(
@@ -91,28 +84,14 @@ async fn test_signup_duplicate_email() {
 
     // First signup should succeed
     let result = recipe_impl
-        .sign_up(
-            &email,
-            "validPassword1!",
-            "public",
-            None,
-            None,
-            &mut ctx,
-        )
+        .sign_up(&email, "validPassword1!", "public", None, None, &mut ctx)
         .await
         .unwrap();
     assert!(matches!(result, SignUpResult::Ok { .. }));
 
     // Second signup with same email should return EmailAlreadyExists
     let result = recipe_impl
-        .sign_up(
-            &email,
-            "validPassword1!",
-            "public",
-            None,
-            None,
-            &mut ctx,
-        )
+        .sign_up(&email, "validPassword1!", "public", None, None, &mut ctx)
         .await
         .unwrap();
     assert!(
@@ -181,28 +160,14 @@ async fn test_signin_success() {
 
     // First sign up
     let signup_result = recipe_impl
-        .sign_up(
-            &email,
-            "validPassword1!",
-            "public",
-            None,
-            None,
-            &mut ctx,
-        )
+        .sign_up(&email, "validPassword1!", "public", None, None, &mut ctx)
         .await
         .unwrap();
     assert!(matches!(signup_result, SignUpResult::Ok { .. }));
 
     // Then sign in
     let result = recipe_impl
-        .sign_in(
-            &email,
-            "validPassword1!",
-            "public",
-            None,
-            None,
-            &mut ctx,
-        )
+        .sign_in(&email, "validPassword1!", "public", None, None, &mut ctx)
         .await
         .unwrap();
 
@@ -232,26 +197,12 @@ async fn test_signin_wrong_password() {
     let email = format!("wrongpw+{}@example.com", uuid::Uuid::new_v4());
 
     recipe_impl
-        .sign_up(
-            &email,
-            "validPassword1!",
-            "public",
-            None,
-            None,
-            &mut ctx,
-        )
+        .sign_up(&email, "validPassword1!", "public", None, None, &mut ctx)
         .await
         .unwrap();
 
     let result = recipe_impl
-        .sign_in(
-            &email,
-            "wrongPassword1!",
-            "public",
-            None,
-            None,
-            &mut ctx,
-        )
+        .sign_in(&email, "wrongPassword1!", "public", None, None, &mut ctx)
         .await
         .unwrap();
 
@@ -275,14 +226,7 @@ async fn test_signin_nonexistent_user() {
     let email = format!("nonexist+{}@example.com", uuid::Uuid::new_v4());
 
     let result = recipe_impl
-        .sign_in(
-            &email,
-            "validPassword1!",
-            "public",
-            None,
-            None,
-            &mut ctx,
-        )
+        .sign_in(&email, "validPassword1!", "public", None, None, &mut ctx)
         .await
         .unwrap();
 
@@ -528,14 +472,7 @@ async fn test_full_password_reset_flow() {
 
     // 4. Update password using update_email_or_password
     let update_result = recipe_impl
-        .update_email_or_password(
-            &user_id,
-            None,
-            Some("newPassword1!"),
-            None,
-            None,
-            &mut ctx,
-        )
+        .update_email_or_password(&user_id, None, Some("newPassword1!"), None, None, &mut ctx)
         .await
         .unwrap();
     assert!(
@@ -582,7 +519,10 @@ async fn test_consume_invalid_reset_token() {
         .unwrap();
 
     assert!(
-        matches!(result, ConsumePasswordResetTokenResult::PasswordResetTokenInvalid),
+        matches!(
+            result,
+            ConsumePasswordResetTokenResult::PasswordResetTokenInvalid
+        ),
         "Expected PasswordResetTokenInvalid for invalid token"
     );
 
@@ -644,7 +584,14 @@ async fn test_update_email() {
 
     // New email should work
     let signin_new = recipe_impl
-        .sign_in(&new_email, "validPassword1!", "public", None, None, &mut ctx)
+        .sign_in(
+            &new_email,
+            "validPassword1!",
+            "public",
+            None,
+            None,
+            &mut ctx,
+        )
         .await
         .unwrap();
     assert!(matches!(signin_new, SignInResult::Ok { .. }));
@@ -687,7 +634,10 @@ async fn test_update_password_with_policy_violation() {
         .unwrap();
 
     assert!(
-        matches!(result, UpdateEmailOrPasswordResult::PasswordPolicyViolation { .. }),
+        matches!(
+            result,
+            UpdateEmailOrPasswordResult::PasswordPolicyViolation { .. }
+        ),
         "Expected PasswordPolicyViolation, got {:?}",
         result
     );
@@ -842,8 +792,7 @@ async fn test_default_email_validator_no_domain_dot() {
 
 #[test]
 fn test_normalise_sign_up_form_fields_defaults() {
-    let fields =
-        supertokens::recipe::emailpassword::utils::normalise_sign_up_form_fields(None);
+    let fields = supertokens::recipe::emailpassword::utils::normalise_sign_up_form_fields(None);
 
     // Should have at least email and password
     assert!(fields.iter().any(|f| f.id == "email"));
@@ -953,7 +902,10 @@ async fn test_signup_returns_correct_user_info() {
                 login_method.email.as_deref(),
                 Some(email.to_lowercase().as_str())
             );
-            assert_eq!(login_method.recipe_id, supertokens::types::user::RecipeId::EmailPassword);
+            assert_eq!(
+                login_method.recipe_id,
+                supertokens::types::user::RecipeId::EmailPassword
+            );
             assert!(login_method.time_joined > 0);
         }
         _ => panic!("Expected Ok"),

@@ -12,7 +12,10 @@ async fn test_querier_not_initialized_before_init() {
     common::reset();
 
     let result = Querier::get_instance(None);
-    assert!(result.is_err(), "Querier should not be available before init");
+    assert!(
+        result.is_err(),
+        "Querier should not be available before init"
+    );
 }
 
 #[tokio::test]
@@ -127,8 +130,7 @@ async fn test_caching_works() {
     let querier = Querier::get_instance(None).unwrap();
     let mut ctx = common::new_user_context();
 
-    let path =
-        supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
+    let path = supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
 
     // First call — should call Core and store in cache
     let resp1 = querier.send_get_request(&path, None, &mut ctx).await;
@@ -161,11 +163,13 @@ async fn test_caching_gets_cleared_with_non_get() {
     let querier = Querier::get_instance(None).unwrap();
     let mut ctx = common::new_user_context();
 
-    let path =
-        supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
+    let path = supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
 
     // First GET — populates cache
-    querier.send_get_request(&path, None, &mut ctx).await.unwrap();
+    querier
+        .send_get_request(&path, None, &mut ctx)
+        .await
+        .unwrap();
     assert!(
         ctx.get::<CoreCallCache>(internal_keys::CORE_CALL_CACHE)
             .map_or(false, |c| !c.is_empty()),
@@ -173,11 +177,8 @@ async fn test_caching_gets_cleared_with_non_get() {
     );
 
     // POST request — should invalidate cache
-    let post_path =
-        supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
-    let _ = querier
-        .send_post_request(&post_path, None, &mut ctx)
-        .await;
+    let post_path = supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
+    let _ = querier.send_post_request(&post_path, None, &mut ctx).await;
 
     // Cache should be cleared after POST
     let cache = ctx.get::<CoreCallCache>(internal_keys::CORE_CALL_CACHE);
@@ -201,11 +202,13 @@ async fn test_caching_does_not_clear_with_keep_alive() {
     let mut ctx = common::new_user_context();
     ctx.insert(internal_keys::KEEP_CACHE_ALIVE, true);
 
-    let path =
-        supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
+    let path = supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
 
     // First GET — populates cache
-    querier.send_get_request(&path, None, &mut ctx).await.unwrap();
+    querier
+        .send_get_request(&path, None, &mut ctx)
+        .await
+        .unwrap();
     assert!(
         ctx.get::<CoreCallCache>(internal_keys::CORE_CALL_CACHE)
             .map_or(false, |c| !c.is_empty()),
@@ -215,16 +218,16 @@ async fn test_caching_does_not_clear_with_keep_alive() {
     // POST with keep_alive — cache entry in user_context is still removed,
     // but global_cache_tag is NOT updated, so next GET with same context
     // would rebuild from Core and match.
-    let post_path =
-        supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
-    let _ = querier
-        .send_post_request(&post_path, None, &mut ctx)
-        .await;
+    let post_path = supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
+    let _ = querier.send_post_request(&post_path, None, &mut ctx).await;
 
     // In Rust implementation, POST always removes the cache from user_context,
     // but keep_alive prevents global_cache_tag update. Re-doing GET should work.
     let resp = querier.send_get_request(&path, None, &mut ctx).await;
-    assert!(resp.is_ok(), "GET after POST with keep_alive should succeed");
+    assert!(
+        resp.is_ok(),
+        "GET after POST with keep_alive should succeed"
+    );
 
     common::reset();
 }
@@ -255,8 +258,7 @@ async fn test_querier_multiple_hosts() {
     supertokens::Supertokens::init(init_args).unwrap();
 
     let querier = Querier::get_instance(None).unwrap();
-    let path =
-        supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
+    let path = supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
     let urls = querier.get_all_core_urls_for_path(&path);
 
     assert_eq!(urls.len(), 2, "Should have two Core URLs");
@@ -277,15 +279,12 @@ async fn test_caching_different_paths_not_shared() {
     let querier = Querier::get_instance(None).unwrap();
     let mut ctx = common::new_user_context();
 
-    let hello_path =
-        supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
+    let hello_path = supertokens::normalised_url_path::NormalisedURLPath::new("/hello").unwrap();
     let apiversion_path =
         supertokens::normalised_url_path::NormalisedURLPath::new("/apiversion").unwrap();
 
     // GET /hello — populates cache for /hello
-    let resp_hello = querier
-        .send_get_request(&hello_path, None, &mut ctx)
-        .await;
+    let resp_hello = querier.send_get_request(&hello_path, None, &mut ctx).await;
     assert!(
         resp_hello.is_ok(),
         "GET /hello should succeed: {:?}",
@@ -311,10 +310,7 @@ async fn test_caching_different_paths_not_shared() {
 
     // Verify the cache has entries for both paths
     let cache = ctx.get::<CoreCallCache>(internal_keys::CORE_CALL_CACHE);
-    assert!(
-        cache.is_some(),
-        "Cache should be populated after both GETs"
-    );
+    assert!(cache.is_some(), "Cache should be populated after both GETs");
     let cache = cache.unwrap();
     assert!(
         cache.len() >= 2,

@@ -27,21 +27,20 @@ async fn test_create_code_with_email() {
     let email = format!("test-{}@example.com", uuid::Uuid::new_v4());
 
     let result = imp
-        .create_code(
-            Some(&email),
-            None,
-            None,
-            None,
-            None,
-            "public",
-            &mut ctx,
-        )
+        .create_code(Some(&email), None, None, None, None, "public", &mut ctx)
         .await;
 
-    assert!(result.is_ok(), "create_code should not error: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "create_code should not error: {:?}",
+        result.err()
+    );
 
     let code = result.unwrap();
-    assert!(!code.pre_auth_session_id.is_empty(), "pre_auth_session_id should not be empty");
+    assert!(
+        !code.pre_auth_session_id.is_empty(),
+        "pre_auth_session_id should not be empty"
+    );
     assert!(!code.code_id.is_empty(), "code_id should not be empty");
     assert!(!code.device_id.is_empty(), "device_id should not be empty");
     assert!(code.code_life_time > 0, "code_life_time should be positive");
@@ -72,10 +71,17 @@ async fn test_create_code_with_phone() {
         )
         .await;
 
-    assert!(result.is_ok(), "create_code with phone should not error: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "create_code with phone should not error: {:?}",
+        result.err()
+    );
 
     let code = result.unwrap();
-    assert!(!code.pre_auth_session_id.is_empty(), "pre_auth_session_id should not be empty");
+    assert!(
+        !code.pre_auth_session_id.is_empty(),
+        "pre_auth_session_id should not be empty"
+    );
     assert!(!code.code_id.is_empty(), "code_id should not be empty");
     assert!(!code.device_id.is_empty(), "device_id should not be empty");
 
@@ -103,7 +109,10 @@ async fn test_consume_code_with_link_code() {
         .await
         .expect("create_code should succeed");
 
-    let link_code = code.link_code.as_deref().expect("link_code should be present");
+    let link_code = code
+        .link_code
+        .as_deref()
+        .expect("link_code should be present");
 
     // Consume using link_code
     let result = imp
@@ -156,7 +165,10 @@ async fn test_consume_code_with_user_input_code() {
         .await
         .expect("create_code should succeed");
 
-    let user_input_code = code.user_input_code.as_deref().expect("user_input_code should be present");
+    let user_input_code = code
+        .user_input_code
+        .as_deref()
+        .expect("user_input_code should be present");
 
     // Consume using user_input_code + device_id
     let result = imp
@@ -265,7 +277,10 @@ async fn test_list_codes_by_email() {
         Some(email.as_str()),
         "Device email should match"
     );
-    assert!(!devices[0].codes.is_empty(), "Device should have at least one code");
+    assert!(
+        !devices[0].codes.is_empty(),
+        "Device should have at least one code"
+    );
 
     common::reset();
 }
@@ -299,7 +314,10 @@ async fn test_list_codes_by_device_id() {
         device.pre_auth_session_id, code.pre_auth_session_id,
         "pre_auth_session_id should match"
     );
-    assert!(!device.codes.is_empty(), "Device should have at least one code");
+    assert!(
+        !device.codes.is_empty(),
+        "Device should have at least one code"
+    );
 
     common::reset();
 }
@@ -439,10 +457,7 @@ async fn test_create_new_code_for_device() {
             assert!(code_life_time > 0, "code_life_time should be positive");
             assert!(time_created > 0, "time_created should be positive");
         }
-        other => panic!(
-            "Expected CreateNewCodeForDeviceResult::Ok, got {:?}",
-            other
-        ),
+        other => panic!("Expected CreateNewCodeForDeviceResult::Ok, got {:?}", other),
     }
 
     common::reset();

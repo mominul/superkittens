@@ -14,9 +14,7 @@ use crate::user_context::UserContext;
 /// A function that checks whether a user has set up a particular factor.
 /// Takes `(user_id)` and returns a list of factor IDs the user has set up (e.g. `["totp"]`).
 pub type GetFactorsSetupForUserFn = Arc<
-    dyn Fn(
-            String,
-        ) -> Pin<Box<dyn Future<Output = Result<Vec<String>, SuperTokensError>> + Send>>
+    dyn Fn(String) -> Pin<Box<dyn Future<Output = Result<Vec<String>, SuperTokensError>> + Send>>
         + Send
         + Sync,
 >;
@@ -118,9 +116,9 @@ impl RecipeInterface for RecipeImplementationImpl {
         _user_context: &mut UserContext,
     ) -> Result<GetFactorsSetupForUserOkResult, SuperTokensError> {
         let funcs = {
-            let guard = FACTOR_SETUP_FUNCS
-                .lock()
-                .map_err(|_| crate::error::raise_general_exception("factor setup funcs lock poisoned"))?;
+            let guard = FACTOR_SETUP_FUNCS.lock().map_err(|_| {
+                crate::error::raise_general_exception("factor setup funcs lock poisoned")
+            })?;
             guard.clone()
         };
 
@@ -184,10 +182,7 @@ impl RecipeInterface for RecipeImplementationImpl {
         let factors = Self::extract_required_factors(&metadata);
 
         if factors.contains(&factor_id.to_string()) {
-            let new_factors: Vec<String> = factors
-                .into_iter()
-                .filter(|f| f != factor_id)
-                .collect();
+            let new_factors: Vec<String> = factors.into_iter().filter(|f| f != factor_id).collect();
 
             let mut update = serde_json::Map::new();
             let mut st_obj = serde_json::Map::new();
